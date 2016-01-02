@@ -1,0 +1,9 @@
+[package]
+name = "hyperlocal"
+version = "0.1.0"
+authors = ["softprops <d.tangren@gmail.com>"]
+
+[dependencies]
+hyper = "0.7"
+unix_socket = "0.5"
+url = "0.5"
