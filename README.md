@@ -8,12 +8,12 @@
 extern crate hyper;
 extern crate hyperlocal;
 
-use hyperlocal::{SocketConnector, DomainUrl}
+use hyperlocal::{DomainUrl, UnixConnector}
 use hyper::Client;
 use std::io;
 
 fn main() {
-  let client = Client::with_connector(SocketConnector);
+  let client = Client::with_connector(UnixConnector);
   let mut res = client.get(
     DomainUrl("/path/to/socket", "/path/to/resource")
   );

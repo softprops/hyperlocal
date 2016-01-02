@@ -3,7 +3,7 @@ extern crate unix_socket;
 extern crate url;
 
 use hyper::client::IntoUrl;
-use hyper::net::{NetworkConnector};
+use hyper::net::{NetworkConnector, NetworkStream};
 use std::io::{self, Read, Write};
 use std::net::SocketAddr;
 use std::time::Duration;
@@ -11,30 +11,30 @@ use unix_socket::UnixStream;
 use url::{parse_path, Host, Url, SchemeData, RelativeSchemeData};
 use url::ParseError as UrlError;
 
-pub struct SocketConnector;
+pub struct UnixConnector;
 
-pub struct SocketStream(pub UnixStream);
+// we wrap because we can't impl traits not defined in this crate
+pub struct UnixSocketStream(pub UnixStream);
 
-impl NetworkConnector for SocketConnector {
-    type Stream = SocketStream;
+impl NetworkConnector for UnixConnector {
+    type Stream = UnixSocketStream;
 
-    fn connect(&self, host: &str, _: u16, scheme: &str) -> hyper::Result<SocketStream> {
+    fn connect(&self, host: &str, _: u16, scheme: &str) -> hyper::Result<UnixSocketStream> {
         Ok(try!(match scheme {
             "unix" => {
-                Ok(SocketStream(try!(UnixStream::connect(host))))
+                Ok(UnixSocketStream(try!(UnixStream::connect(host))))
             },
             _ => {
                 Err(io::Error::new(io::ErrorKind::InvalidInput,
-                                   "Invalid scheme for Http"))
+                                   "Invalid scheme for unix"))
             }
         }))
     }
 }
 
-impl hyper::net::NetworkStream for SocketStream {
+impl NetworkStream for UnixSocketStream {
     #[inline]
     fn peer_addr(&mut self) -> io::Result<SocketAddr> {
-        //                    self.0.peer_addr()
         Err(io::Error::new(io::ErrorKind::InvalidInput, "unix domain sockets do not apply here"))
     }
 
@@ -50,14 +50,14 @@ impl hyper::net::NetworkStream for SocketStream {
 }
 
 
-impl Read for SocketStream {
+impl Read for UnixSocketStream {
     #[inline]
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         self.0.read(buf)
     }
 }
 
-impl Write for SocketStream {
+impl Write for UnixSocketStream {
     #[inline]
     fn write(&mut self, msg: &[u8]) -> std::io::Result<usize> {
         self.0.write(msg)
