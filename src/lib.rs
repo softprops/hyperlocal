@@ -3,11 +3,13 @@ extern crate unix_socket;
 extern crate url;
 
 use hyper::client::IntoUrl;
-use hyper::net::{NetworkConnector, NetworkStream};
+use hyper::net::{NetworkConnector, NetworkStream, NetworkListener};
+use hyper::Server;
 use std::io::{self, Read, Write};
-use std::net::SocketAddr;
+use std::path::Path;
+use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::time::Duration;
-use unix_socket::UnixStream;
+use unix_socket::{UnixListener, UnixStream};
 use url::{parse_path, Host, Url, SchemeData, RelativeSchemeData};
 use url::ParseError as UrlError;
 
@@ -19,6 +21,13 @@ pub struct UnixConnector;
 
 // we wrap because we can't impl traits not defined in this crate
 pub struct UnixSocketStream(pub UnixStream);
+
+impl Clone for UnixSocketStream {
+    #[inline]
+    fn clone(&self) -> UnixSocketStream {
+        UnixSocketStream(self.0.try_clone().unwrap())
+    }
+}
 
 impl NetworkConnector for UnixConnector {
     type Stream = UnixSocketStream;
@@ -39,7 +48,14 @@ impl NetworkConnector for UnixConnector {
 impl NetworkStream for UnixSocketStream {
     #[inline]
     fn peer_addr(&mut self) -> io::Result<SocketAddr> {
-        Err(io::Error::new(io::ErrorKind::InvalidInput, "unix domain sockets do not apply here"))
+        self.0.peer_addr().map(|_|{
+            SocketAddr::V4(
+                SocketAddrV4::new(
+                    Ipv4Addr::new(0, 0, 0, 0),
+                    0
+                )
+            )
+        })
     }
 
     #[inline]
@@ -107,5 +123,59 @@ impl<'a> IntoUrl for DomainUrl<'a> {
             query: query,
             fragment: fragment
         })
+    }
+}
+
+#[derive(Debug)]
+pub struct UnixSocketListener(pub UnixListener);
+
+impl Drop for UnixSocketListener {
+    fn drop(&mut self) {
+        println!("dropping socker listener. todo delete socket path");
+    }
+}
+
+impl Clone for UnixSocketListener {
+    #[inline]
+    fn clone(&self) -> UnixSocketListener {
+        UnixSocketListener(self.0.try_clone().unwrap())
+    }
+}
+
+impl UnixSocketListener {
+    /// Start listening to an address over HTTP.
+    pub fn new<P: AsRef<Path>>(addr: P) -> hyper::Result<UnixSocketListener> {
+        Ok(UnixSocketListener(try!(UnixListener::bind(addr))))
+    }
+}
+
+impl NetworkListener for UnixSocketListener {
+    type Stream = UnixSocketStream;
+
+    #[inline]
+    fn accept(&mut self) -> hyper::Result<UnixSocketStream> {
+        Ok(UnixSocketStream(try!(self.0.accept()).0))
+    }
+
+    #[inline]
+    fn local_addr(&mut self) -> io::Result<SocketAddr> {
+        self.0.local_addr().map(|_| {
+            SocketAddr::V4(
+                SocketAddrV4::new(
+                    Ipv4Addr::new(0, 0, 0, 0), 0
+                )
+            )
+        })
+    }
+}
+
+/// A type that provides a factory interface for creating
+/// unix socket based hyper Servers
+pub struct UnixSocketServer;
+
+impl UnixSocketServer {
+    /// creates a new hyper Server from a unix socket path
+    pub fn new<P: AsRef<Path>>(p: P) -> hyper::Result<Server<UnixSocketListener>> {
+        UnixSocketListener::new(p).map(Server::new)
     }
 }
