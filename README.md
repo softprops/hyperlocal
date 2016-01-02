@@ -4,20 +4,39 @@
 
 ## usage
 
+### servers
+
 ```rust
 extern crate hyper;
 extern crate hyperlocal;
 
-use hyperlocal::{DomainUrl, UnixConnector}
-use hyper::Client;
-use std::io;
+use hyper::server::{Request, Response};
+use hyperlocal::UnixSocketServer;
 
 fn main() {
-  let client = Client::with_connector(UnixConnector);
-  let mut res = client.get(
-    DomainUrl::new("/path/to/socket", "/path/to/resource")
-  );
-  io::copy(&mut res, &mut io::stdout()).unwrap();
+    let path = "test.sock";
+    let server = UnixSocketServer::new(path).unwrap();
+    server.handle(|_: Request, res: Response| {
+        let _ = res.send(b"It's a Unix system. I know this.");
+    }).unwrap();
+    println!("listening @ {}", path);
+}
+```
+
+### client
+
+```rust
+extern crate hyper;
+extern crate hyperlocal;
+
+use hyper::Client;
+use hyperlocal::{DomainUrl, UnixConnector};
+
+fn main() {
+    let path = "test.sock";
+    let client = Client::with_connector(UnixConnector);
+    let mut res = client.get(DomainUrl::new(path, "/")).send().unwrap();
+    std::io::copy(&mut res, &mut std::io::stdout()).unwrap();
 }
 ```
 
