@@ -11,6 +11,10 @@ use unix_socket::UnixStream;
 use url::{parse_path, Host, Url, SchemeData, RelativeSchemeData};
 use url::ParseError as UrlError;
 
+const UNIX_SCHEME: &'static str = "unix";
+
+/// A type which implements NetworkConnector and NetworkStream interfaces
+/// for unix domain sockets
 pub struct UnixConnector;
 
 // we wrap because we can't impl traits not defined in this crate
@@ -21,7 +25,7 @@ impl NetworkConnector for UnixConnector {
 
     fn connect(&self, host: &str, _: u16, scheme: &str) -> hyper::Result<UnixSocketStream> {
         Ok(try!(match scheme {
-            "unix" => {
+            unix if unix == UNIX_SCHEME => {
                 Ok(UnixSocketStream(try!(UnixStream::connect(host))))
             },
             _ => {
@@ -69,8 +73,12 @@ impl Write for UnixSocketStream {
     }
 }
 
+/// A type which implmements hyper's IntoUrl interface
+/// for unix domain sockets
 pub struct DomainUrl<'a> {
+    /// path to domain socket
     socket: &'a str,
+    /// url path including leading slash, path, and query string
     path: &'a str
 }
 
@@ -86,7 +94,7 @@ impl<'a> IntoUrl for DomainUrl<'a> {
     fn into_url(self) -> Result<Url, UrlError> {
         let (path, query, fragment) = try!(parse_path(self.path));
         Ok(Url {
-            scheme: "unix".to_owned(),
+            scheme: UNIX_SCHEME.to_owned(),
             scheme_data: SchemeData::Relative(
                 RelativeSchemeData {
                     username: "".to_owned(),

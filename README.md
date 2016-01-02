@@ -15,7 +15,7 @@ use std::io;
 fn main() {
   let client = Client::with_connector(UnixConnector);
   let mut res = client.get(
-    DomainUrl("/path/to/socket", "/path/to/resource")
+    DomainUrl::new("/path/to/socket", "/path/to/resource")
   );
   io::copy(&mut res, &mut io::stdout()).unwrap();
 }
