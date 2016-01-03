@@ -1,5 +1,8 @@
 //! hyperlocal provides [hyper](github.com/hyperium/hyper) client and server bindings
 //! for [unix domain sockets](https://github.com/rust-lang-nursery/unix-socket)
+//!
+//! See the `UnixSocketConnector` docs for how to configure hyper clients and the `UnixSocketServer` docs
+//! for how to configure hyper servers
 
 extern crate hyper;
 extern crate unix_socket;
