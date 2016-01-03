@@ -6,7 +6,7 @@
 
 ## api docs
 
-Find them [here](...)
+Find them [here](https://softprops.github.com/hyperlocal)
 
 ## install
 
