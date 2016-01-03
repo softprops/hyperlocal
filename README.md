@@ -2,7 +2,15 @@
 
 [![Build Status](https://travis-ci.org/softprops/hyperlocal.svg?branch=master)](https://travis-ci.org/softprops/hyperlocal)
 
-> [hyper](https://github.com/hyperium/hyper) bindings for [unix domain sockets](https://github.com/rust-lang-nursery/unix-socket)
+> [hyper](https://github.com/hyperium/hyper) client and server bindings for [unix domain sockets](https://github.com/rust-lang-nursery/unix-socket)
+
+## api docs
+
+Find them [here](...)
+
+## install
+
+tbd
 
 ## usage
 
