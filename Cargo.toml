@@ -2,6 +2,11 @@
 name = "hyperlocal"
 version = "0.1.0"
 authors = ["softprops <d.tangren@gmail.com>"]
+description = "Hyper bindings for unix domain sockets"
+homepage = "https://github.com/softprops/hyperlocal"
+repository = "https://github.com/softprops/hyperlocal"
+keywords = ["hyper", "unix", "sockets", "http"]
+license = "MIT"
 
 [dependencies]
 hyper = "0.7"
