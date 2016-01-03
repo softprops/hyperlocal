@@ -21,6 +21,8 @@ tbd
 
 ### servers
 
+A typical server can be build with `hyperlocal::UnixSocketServer`
+
 ```rust
 extern crate hyper;
 extern crate hyperlocal;
@@ -39,6 +41,15 @@ fn main() {
 ```
 
 ### clients
+
+You can communicate over HTTP with unix domain socket servers using hyper's Client interface.
+Configure your hyper client using `Client::with_connector(UnixSocketConnector)`.
+
+Hyper's client
+interface makes it easy to issue typical HTTP methods like GET, POST, DELETE with factory methods,
+`get`, `post`, `delete`, ect. These require something that can be tranformed into a `Url`.
+Since unix domain sockets don't hosts and ports, a simple string won't do. Instead use `DomainUrl`
+which wraps the path to the domain socket and the uri path and query string.
 
 ```rust
 extern crate hyper;
