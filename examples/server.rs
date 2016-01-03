@@ -11,5 +11,4 @@ fn main() {
         let _ = res.send(b"It's a Unix system. I know this.");
     }).unwrap();
     println!("listening @ {}", path);
-
 }
