@@ -15,7 +15,12 @@ Find them [here](https://softprops.github.com/hyperlocal)
 
 ## install
 
-tbd
+Add the following to your `Cargo.toml` file
+
+```toml
+[dependencies]
+hyperlocal = "0.1.0"
+```
 
 ## usage
 
