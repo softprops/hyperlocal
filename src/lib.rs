@@ -1,3 +1,6 @@
+//! hyperlocal provides [hyper](github.com/hyperium/hyper) client and server bindings
+//! for [unix domain sockets](https://github.com/rust-lang-nursery/unix-socket)
+
 extern crate hyper;
 extern crate unix_socket;
 extern crate url;
@@ -15,11 +18,25 @@ use url::ParseError as UrlError;
 
 const UNIX_SCHEME: &'static str = "unix";
 
-/// A type which implements NetworkConnector and NetworkStream interfaces
+/// A type which implements hyper's NetworkConnector trait
 /// for unix domain sockets
-pub struct UnixConnector;
+/// A type which implements hyper's IntoUrl interface
+/// for unix domain sockets. You can use this with any of
+/// the HTTP factory methods on hyper's Client interface.
+///
+/// # examples
+///
+/// ```no_run
+///  extern crate hyper;
+///  extern crate hyperlocal;
+///
+///  let client = hyper::Client::with_connector(
+///      hyperlocal::UnixSocketConnector
+///  );
+/// ```
+pub struct UnixSocketConnector;
 
-// we wrap because we can't impl traits not defined in this crate
+/// A type which implements hyper's NetworkStream trait
 pub struct UnixSocketStream(pub UnixStream);
 
 impl Clone for UnixSocketStream {
@@ -29,7 +46,7 @@ impl Clone for UnixSocketStream {
     }
 }
 
-impl NetworkConnector for UnixConnector {
+impl NetworkConnector for UnixSocketConnector {
     type Stream = UnixSocketStream;
 
     fn connect(&self, host: &str, _: u16, scheme: &str) -> hyper::Result<UnixSocketStream> {
@@ -89,8 +106,23 @@ impl Write for UnixSocketStream {
     }
 }
 
-/// A type which implmements hyper's IntoUrl interface
-/// for unix domain sockets
+/// A type which implements hyper's IntoUrl interface
+/// for unix domain sockets. You can use this with any of
+/// the HTTP factory methods on hyper's Client interface.
+///
+/// ```no_run
+///  extern crate hyper;
+///  extern crate hyperlocal;
+///
+///  let client = hyper::Client::with_connector(
+///      hyperlocal::UnixSocketConnector
+///  );
+///  let url = hyperlocal::DomainUrl::new(
+///      "/path/to/socket", "/urlpath?key=value"
+///  );
+///
+///  client.get(url).send();
+/// ```
 pub struct DomainUrl<'a> {
     /// path to domain socket
     socket: &'a str,
@@ -99,6 +131,7 @@ pub struct DomainUrl<'a> {
 }
 
 impl<'a> DomainUrl<'a> {
+    /// path to socket and url path. path should include a leading slash
     pub fn new(socket: &'a str, path: &'a str) -> DomainUrl<'a> {
         DomainUrl {
             socket: socket, path: path
@@ -126,14 +159,9 @@ impl<'a> IntoUrl for DomainUrl<'a> {
     }
 }
 
+/// A type which implements hyper's NetworkListener trait
 #[derive(Debug)]
 pub struct UnixSocketListener(pub UnixListener);
-
-impl Drop for UnixSocketListener {
-    fn drop(&mut self) {
-        println!("dropping socker listener. todo delete socket path");
-    }
-}
 
 impl Clone for UnixSocketListener {
     #[inline]
@@ -171,6 +199,22 @@ impl NetworkListener for UnixSocketListener {
 
 /// A type that provides a factory interface for creating
 /// unix socket based hyper Servers
+///
+/// # examples
+///
+/// ```no_run
+///  extern crate hyper;
+///  extern crate hyperlocal;
+///
+///  let server = hyperlocal::UnixSocketServer::new(
+///      "path/to/socket"
+///  ).unwrap();
+///  let listening = server.handle(
+///      |_: hyper::server::Request, res: hyper::server::Response| {
+///          let _ = res.send(b"It's a Unix system. I know this.");
+///      }
+///  ).unwrap();
+/// ```
 pub struct UnixSocketServer;
 
 impl UnixSocketServer {
