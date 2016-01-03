@@ -38,7 +38,7 @@ fn main() {
 }
 ```
 
-### client
+### clients
 
 ```rust
 extern crate hyper;
