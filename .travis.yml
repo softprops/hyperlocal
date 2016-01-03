@@ -1,0 +1,48 @@
+sudo: false
+
+language: rust
+
+matrix:
+  fast_finish: true
+  include:
+  - rust: nightly
+  - rust: beta
+  - rust: stable
+
+script:
+- cargo build
+- cargo test
+- cargo bench
+
+cache:
+  apt: true
+  directories:
+  - target/debug/deps
+  - target/debug/build
+
+addons:
+  apt:
+    packages:
+    - libcurl4-openssl-dev
+    - libelf-dev
+    - libdw-dev
+    - binutils-dev # required for `kcov --verify`
+    - libbfd-dev # required for `kcov --verify`
+
+after_success: |
+  [ $TRAVIS_RUST_VERSION = stable ] &&
+  wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
+  tar xzf master.tar.gz && mkdir kcov-master/build && cd kcov-master/build && cmake .. && make && make install DESTDIR=../tmp && cd ../.. &&
+  ls target/debug &&
+  ./kcov-master/tmp/usr/local/bin/kcov --verify --coveralls-id=$TRAVIS_JOB_ID --exclude-pattern=/.cargo target/kcov target/debug/hubcaps-* &&
+  [ $TRAVIS_BRANCH = master ] &&
+  [ $TRAVIS_PULL_REQUEST = false ] &&
+  [ $TRAVIS_RUST_VERSION = stable ] &&
+  cargo doc --no-deps &&
+  echo "<meta http-equiv=refresh content=0;url=`echo $TRAVIS_REPO_SLUG | cut -d '/' -f 2`/index.html>" > target/doc/index.html &&
+  pip install --user ghp-import &&
+  /home/travis/.local/bin/ghp-import -n target/doc &&
+  git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
+env:
+  global:
+    secure: ME84zRxPLO1oP0mp0Q6Hv2d8xfnm19JZZSrac6ojORZXM65mXr7kDiPwliLnPypdB2m2aB86+Lu3lkEddNvyqU5BPWe6TqZVxTy0hIt+aPf9CkZkjzX7ZLg2iZi9A16sGXE84jYyVlf+djLPj/27ki/FA1shrTxeiYNHieO/ZoFPJFq2tlfpJPDTQAnAB3MgK3+E9qRYocTKAEpZUVU5b1qvmqNa1yA83AUl0RUqoOYSa8lURiebAb6+DcdCjKx923wQY+dASxUWWY3VzKTxO37Mup8yUolDHdUMlLceokv6EjUZ8hEUgY9v/xtnJUTsia+tlpOlg+NuYBbGsPiT+GuPvGO4mh9GZwK/rxJ9EhalegH+aYDp8C0BeCCrVYVpb+nZkYgfbO4YibL1jIhBugzwuAq8EIpk7jBgkgMYVNL/hc6JcOXp7WVJi1kZ/IZTjAhlCTN5GcNMPMfndD3gBhKlK0DRtLjZcO7U8ycue+viYTHbwPPUzOMc4MKtqn9oy5NV/fxqBi3YR7P2uY8YBcKo3wAI0lwvU5LLc2IudCW+S9xfJqMekyEQ59pGws8faDYGJR9LZxJI0ZZiuJb8kHulZYcJkAd90CKPreIUZfgFPNujH84Sh3A1fyCZ+sAqOR93FLT/7Fn2DLcfD3tpNep5IIePGkN32TUwRcSUu7A=
