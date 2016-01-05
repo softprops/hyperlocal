@@ -1,6 +1,7 @@
 # hyperlocal
 
-[![Build Status](https://travis-ci.org/softprops/hyperlocal.svg?branch=master)](https://travis-ci.org/softprops/hyperlocal)
+[![Build Status](https://travis-ci.org/softprops/hyperlocal.svg?branch=master)](https://travis-ci.org/softprops/hyperlocal) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![crates.io](http://meritbadge.herokuapp.com/hyperlocal)](https://crates.io/crates/hyperlocal)
 
 > [hyper](https://github.com/hyperium/hyper) client and server bindings for [unix domain sockets](https://github.com/rust-lang-nursery/unix-socket)
 
