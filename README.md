@@ -7,7 +7,7 @@
 Hyper is a rock solid [rustlang](https://www.rust-lang.org/) HTTP client and server tool kit. [Unix domain sockets](https://en.wikipedia.org/wiki/Unix_domain_socket) provide
 a mechanism for host-local interprocess communication. Hyperlocal builds on and complements hyper's interfaces for building unix domain socket HTTP clients and servers.
 
-This is useful for providing simple HTTP interfaces for your Unix daemons in cases where you want to limit access to the current host, in which case, opening and exposing tcp ports is not needed. Examples of unix daemons that provide this kind of host local interface include, [docker](https://docs.docker.com/engine/misc/), a process container manager.
+This is useful for exposing simple HTTP interfaces for your Unix daemons in cases where you want to limit access to the current host, in which case, opening and exposing tcp ports is not needed. Examples of unix daemons that provide this kind of host local interface include, [docker](https://docs.docker.com/engine/misc/), a process container manager.
 
 ## api docs
 
@@ -47,14 +47,15 @@ fn main() {
 
 ### clients
 
-You can communicate over HTTP with unix domain socket servers using hyper's Client interface.
+You can communicate over HTTP with Unix domain socket servers using hyper's Client interface.
 Configure your hyper client using `Client::with_connector(UnixSocketConnector)`.
 
 Hyper's client
 interface makes it easy to issue typical HTTP methods like GET, POST, DELETE with factory methods,
-`get`, `post`, `delete`, ect. These require something that can be tranformed into a `Url`.
-Since unix domain sockets don't hosts and ports, a simple string won't do. Instead use `DomainUrl`
-which wraps the path to the domain socket and the uri path and query string.
+`get`, `post`, `delete`, ect. These require an argument that can be tranformed into a `Url`.
+Since unix domain sockets aren't represented hostnames that resolve to ip addresses coupled with network ports ports,
+you standard url string won't do. Instead, use `DomainUrl`
+which represents both file path to the domain socket and the resource uri path and query string.
 
 ```rust
 extern crate hyper;
