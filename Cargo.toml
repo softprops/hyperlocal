@@ -9,6 +9,6 @@ keywords = ["hyper", "unix", "sockets", "http"]
 license = "MIT"
 
 [dependencies]
-hyper = "0.7"
+hyper = "0.8"
 unix_socket = "0.5"
 url = "0.5"
