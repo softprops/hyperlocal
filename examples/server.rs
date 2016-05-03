@@ -8,7 +8,7 @@ fn main() {
     let path = "test.sock";
     let server = UnixSocketServer::new(path).unwrap();
     server.handle(|_: Request, res: Response| {
-        let _ = res.send(b"It's a Unix system. I know this.");
+        let _ = res.send(b"It's a Unix system. I know this.\n");
     }).unwrap();
     println!("listening @ {}", path);
 }

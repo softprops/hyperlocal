@@ -1,5 +1,5 @@
-//! hyperlocal provides [hyper](github.com/hyperium/hyper) client and server bindings
-//! for [unix domain sockets](https://github.com/rust-lang-nursery/unix-socket)
+//! hyperlocal provides [hyper](http://github.com/hyperium/hyper) client and server bindings
+//! for [unix domain sockets](http://rust-lang-nursery.github.io/unix-socket/doc/v0.5.0/unix_socket/)
 //!
 //! See the `UnixSocketConnector` docs for how to configure hyper clients and the `UnixSocketServer` docs
 //! for how to configure hyper servers
@@ -7,7 +7,9 @@
 extern crate hyper;
 extern crate unix_socket;
 extern crate url;
+extern crate rustc_serialize;
 
+use std::borrow::Cow;
 use hyper::client::IntoUrl;
 use hyper::net::{NetworkConnector, NetworkStream, NetworkListener};
 use hyper::Server;
@@ -16,8 +18,10 @@ use std::path::Path;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::time::Duration;
 use unix_socket::{UnixListener, UnixStream};
-use url::{parse_path, Host, Url, SchemeData, RelativeSchemeData};
+use url::Url;
 use url::ParseError as UrlError;
+
+use rustc_serialize::hex::{ToHex, FromHex};
 
 const UNIX_SCHEME: &'static str = "unix";
 
@@ -55,7 +59,8 @@ impl NetworkConnector for UnixSocketConnector {
     fn connect(&self, host: &str, _: u16, scheme: &str) -> hyper::Result<UnixSocketStream> {
         Ok(try!(match scheme {
             unix if unix == UNIX_SCHEME => {
-                Ok(UnixSocketStream(try!(UnixStream::connect(host))))
+                let host_str = try!(DomainUrl::resolve(host));
+                Ok(UnixSocketStream(try!(UnixStream::connect(host_str))))
             },
             _ => {
                 Err(io::Error::new(io::ErrorKind::InvalidInput,
@@ -126,39 +131,32 @@ impl Write for UnixSocketStream {
 ///
 ///  client.get(url).send();
 /// ```
+#[derive(Debug)]
 pub struct DomainUrl<'a> {
-    /// path to domain socket
-    socket: &'a str,
     /// url path including leading slash, path, and query string
-    path: &'a str
+    url: Cow<'a, str>
 }
 
 impl<'a> DomainUrl<'a> {
     /// path to socket and url path. path should include a leading slash
     pub fn new(socket: &'a str, path: &'a str) -> DomainUrl<'a> {
+        let host = socket.as_bytes().to_hex();
+        let host_str = format!("unix://{}:0{}", host, path);
         DomainUrl {
-            socket: socket, path: path
+            url: Cow::Owned(host_str)
         }
+    }
+
+    fn resolve<'b>(host: &'b str) -> hyper::Result<String> {
+        let host_bytes = try!(host.from_hex().map_err(|_| UrlError::InvalidDomainCharacter));
+        let host_str = try!(std::str::from_utf8(host_bytes.as_ref()));
+        Ok(host_str.to_owned())
     }
 }
 
 impl<'a> IntoUrl for DomainUrl<'a> {
     fn into_url(self) -> Result<Url, UrlError> {
-        let (path, query, fragment) = try!(parse_path(self.path));
-        Ok(Url {
-            scheme: UNIX_SCHEME.to_owned(),
-            scheme_data: SchemeData::Relative(
-                RelativeSchemeData {
-                    username: "".to_owned(),
-                    password: None,
-                    host: Host::Domain(self.socket.to_owned()),
-                    port: Some(0),
-                    default_port: None,
-                    path: path
-                }),
-            query: query,
-            fragment: fragment
-        })
+        Url::parse(&self.url)
     }
 }
 
@@ -190,6 +188,7 @@ impl NetworkListener for UnixSocketListener {
 
     #[inline]
     fn local_addr(&mut self) -> io::Result<SocketAddr> {
+        // return a dummy addr
         self.0.local_addr().map(|_| {
             SocketAddr::V4(
                 SocketAddrV4::new(
@@ -224,5 +223,20 @@ impl UnixSocketServer {
     /// creates a new hyper Server from a unix socket path
     pub fn new<P: AsRef<Path>>(p: P) -> hyper::Result<Server<UnixSocketListener>> {
         UnixSocketListener::new(p).map(Server::new)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::DomainUrl;
+    #[test]
+    fn domain_url_test() {
+        let url = DomainUrl::new("/var/run/tube.sock", "/");
+        assert_eq!(url.url, "unix://2f7661722f72756e2f747562652e736f636b:0/");
+    }
+
+    #[test]
+    fn domain_url_resolve() {
+        assert_eq!(DomainUrl::resolve("2f7661722f72756e2f747562652e736f636b").unwrap(), "/var/run/tube.sock")
     }
 }
