@@ -1,6 +1,6 @@
 [package]
 name = "hyperlocal"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["softprops <d.tangren@gmail.com>"]
 description = "Hyper bindings for unix domain sockets"
 homepage = "https://github.com/softprops/hyperlocal"

@@ -20,7 +20,7 @@ Add the following to your `Cargo.toml` file
 
 ```toml
 [dependencies]
-hyperlocal = "0.1.0"
+hyperlocal = "0.2.0"
 ```
 
 ## usage
@@ -73,4 +73,4 @@ fn main() {
 }
 ```
 
-Doug Tangren (softprops) 2015
+Doug Tangren (softprops) 2015-2016
