@@ -213,7 +213,7 @@ impl NetworkListener for UnixSocketListener {
 ///  ).unwrap();
 ///  let listening = server.handle(
 ///      |_: hyper::server::Request, res: hyper::server::Response| {
-///          let _ = res.send(b"It's a Unix system. I know this.");
+///          let _ = res.send(b"It's a Unix system. I know this.\n");
 ///      }
 ///  ).unwrap();
 /// ```
