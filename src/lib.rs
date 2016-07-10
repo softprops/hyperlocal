@@ -5,6 +5,7 @@
 //! for how to configure hyper servers
 
 extern crate hyper;
+#[cfg(external_unix_socket)]
 extern crate unix_socket;
 extern crate url;
 extern crate rustc_serialize;
@@ -17,9 +18,14 @@ use std::io::{self, Read, Write};
 use std::path::Path;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::time::Duration;
+#[cfg(external_unix_socket)]
 use unix_socket::{UnixListener, UnixStream};
+#[cfg(not(external_unix_socket))]
+use std::os::unix::net::{UnixListener, UnixStream};
+
 use url::Url;
 use url::ParseError as UrlError;
+
 
 use rustc_serialize::hex::{ToHex, FromHex};
 
