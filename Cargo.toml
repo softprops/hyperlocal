@@ -13,7 +13,7 @@ default = ["external_unix_socket"]
 external_unix_socket = ["unix_socket"]
 
 [dependencies]
-hyper = "0.9"
+hyper = "0.10"
 rustc-serialize = "0.3"
 unix_socket = { version = "0.5", optional = true}
 url = "1.0"
