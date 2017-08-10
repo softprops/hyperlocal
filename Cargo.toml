@@ -1,6 +1,6 @@
 [package]
 name = "hyperlocal"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["softprops <d.tangren@gmail.com>"]
 description = "Hyper bindings for unix domain sockets"
 homepage = "https://github.com/softprops/hyperlocal"
@@ -8,12 +8,10 @@ repository = "https://github.com/softprops/hyperlocal"
 keywords = ["hyper", "unix", "sockets", "http"]
 license = "MIT"
 
-[features]
-default = ["external_unix_socket"]
-external_unix_socket = ["unix_socket"]
-
 [dependencies]
-hyper = "0.10"
-rustc-serialize = "0.3"
-unix_socket = { version = "0.5", optional = true}
-url = "1.0"
+hyper = "0.11"
+tokio-uds = "0.1"
+futures = "0.1"
+tokio-core = "0.1"
+tokio-io = "0.1"
+tokio-service = "0.1"
