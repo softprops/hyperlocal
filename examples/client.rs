@@ -1,26 +1,24 @@
 extern crate futures;
 extern crate hyper;
-extern crate tokio_core;
 extern crate hyperlocal;
+extern crate tokio_core;
 
-use hyper::Client;
-use hyperlocal::UnixSocketConnector;
-use std::io;
+use std::io::{self, Write};
+
 use futures::Stream;
 use futures::Future;
-use std::io::Write;
+use hyper::{Client, Result};
+use hyperlocal::{Uri, UnixConnector};
+use tokio_core::reactor::Core;
 
-fn main() {
-    let path = "unix://test.sock/".parse::<hyper::Uri>().unwrap();
-    println!("{}", path.to_string());
-    let mut core = tokio_core::reactor::Core::new().unwrap();
+fn run() -> Result<()> {
+    let mut core = Core::new()?;
     let handle = core.handle();
-
     let client = Client::configure()
-        .connector(UnixSocketConnector(handle))
+        .connector(UnixConnector::new(handle))
         .build(&core.handle());
     let work = client
-        .get(path)
+        .get(Uri::new("test.sock", "/").into())
         .and_then(|res| {
             println!("Response: {}", res.status());
             println!("Headers: \n{}", res.headers());
@@ -33,5 +31,9 @@ fn main() {
             println!("\n\nDone.");
         });
 
-    core.run(work).unwrap();
+    core.run(work)
+}
+
+fn main() {
+    run().unwrap()
 }
