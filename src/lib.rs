@@ -28,19 +28,19 @@ const UNIX_SCHEME: &str = "unix";
 
 pub mod server;
 
-/// A type which implements Into for hyper's  `hyper::Uri` type
+/// A type which implements `Into` for hyper's  `hyper::Uri` type
 /// targetting unix domain sockets.
-
+///
 /// You can use this with any of
 /// the HTTP factory methods on hyper's Client interface
 /// and for creating requests
 ///
 /// ```no_run
-///  extern crate hyper;
-///  extern crate hyperlocal;
+/// extern crate hyper;
+/// extern crate hyperlocal;
 ///
-///  let url = hyperlocal::Uri::new(
-///      "/path/to/socket", "/urlpath?key=value"
+/// let url = hyperlocal::Uri::new(
+///   "/path/to/socket", "/urlpath?key=value"
 ///  );
 ///  let req: hyper::Request<hyper::Body> =
 ///    hyper::Request::new(
@@ -61,7 +61,8 @@ impl<'a> Into<HyperUri> for Uri<'a> {
 }
 
 impl<'a> Uri<'a> {
-    /// path to socket and request path. request path should include a leading slash
+    /// Productes a new `Uri` from path to domain socket and request path.
+    /// request path should include a leading slash
     pub fn new<P>(socket: P, path: &'a str) -> Self
     where
         P: AsRef<Path>,
