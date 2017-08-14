@@ -72,7 +72,7 @@ where
 ///
 /// //let server = hyperlocal::Http::new().bind(
 ///  // "path/to/socket",
-///  //  || HelloWorld
+///  //  || Ok(HelloWorld)
 /// //)
 ///
 /// ```
