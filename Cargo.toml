@@ -8,6 +8,9 @@ repository = "https://github.com/softprops/hyperlocal"
 keywords = ["hyper", "unix", "sockets", "http"]
 license = "MIT"
 
+[dev-dependencies]
+service-fn = { git = "https://github.com/tokio-rs/service-fn" }
+
 [dependencies]
 futures = "0.1"
 hex = "0.2"

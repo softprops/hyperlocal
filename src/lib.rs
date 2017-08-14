@@ -16,12 +16,11 @@ use std::borrow::Cow;
 use std::path::Path;
 
 use futures::IntoFuture;
-use futures::future::{Future, FutureResult};
+use futures::future::FutureResult;
 
-use hyper::{Request, Response, Uri as HyperUri};
-use hyper::server::Http as HyperHttp;
-use tokio_uds::{UnixListener, UnixStream};
-use tokio_core::reactor::{Core, Handle};
+use hyper::Uri as HyperUri;
+use tokio_uds::UnixStream;
+use tokio_core::reactor::Handle;
 use tokio_service::Service;
 use hex::{FromHex, ToHex};
 const UNIX_SCHEME: &str = "unix";
@@ -143,8 +142,17 @@ impl Service for UnixConnector {
 mod tests {
     use super::*;
     use hyper::Uri as HyperUri;
+    use tokio_core::reactor::Core;
     #[test]
-    fn domain_urls_into_uris() {
+    fn connector_rejects_non_unix_uris() {
+        //let connector = UnixConnector::new(core.handle)
+    }
+
+    #[test]
+    fn connector_rejects_hand_crafted_unix_uris() {}
+
+    #[test]
+    fn unix_uris_into_hyper_uris() {
         let unix: HyperUri = Uri::new("foo.sock", "/").into();
         let expected: HyperUri = "unix://666f6f2e736f636b:0/".parse().unwrap();
         assert_eq!(unix, expected);

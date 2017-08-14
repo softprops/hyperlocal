@@ -1,18 +1,15 @@
 //! Hyper server bindings for unix domain sockets
 
 use std::marker::PhantomData;
-use std::io;
-use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::path::Path;
 
 use futures::future::Future;
 use futures::stream::Stream;
-use hyper::{Request, Response, Uri};
+use hyper::{Request, Response};
 use hyper::server::Http as HyperHttp;
-use tokio_core::reactor::{Core, Handle};
-use tokio_io::{AsyncRead, AsyncWrite};
-use tokio_service::{NewService, Service};
-use tokio_uds::{UnixListener, UnixStream};
+use tokio_core::reactor::Core;
+use tokio_service::NewService;
+use tokio_uds::UnixListener;
 
 /// An instance of a server created through `Http::bind`.
 //
@@ -23,7 +20,7 @@ where
     B: Stream<Error = ::hyper::Error>,
     B::Item: AsRef<[u8]>,
 {
-    protocol: Http<B::Item>,
+    protocol: HyperHttp<B::Item>,
     new_service: S,
     core: Core,
     listener: UnixListener,
@@ -40,6 +37,7 @@ where
 {
     pub fn run(self) -> ::hyper::Result<()> {
         let Server {
+            protocol,
             new_service,
             mut core,
             listener,
@@ -49,7 +47,7 @@ where
         let server = listener
             .incoming()
             .for_each(move |(sock, _)| {
-                HyperHttp::new().bind_connection(
+                protocol.bind_connection(
                     &handle,
                     sock,
                     ([127, 0, 0, 1], 0).into(),
@@ -110,7 +108,7 @@ impl<B: AsRef<[u8]> + 'static> Http<B> {
         let listener = UnixListener::bind(path.as_ref(), &handle)?;
 
         Ok(Server {
-            protocol: self.clone(),
+            protocol: HyperHttp::new(),
             new_service: new_service,
             core: core,
             listener: listener,
