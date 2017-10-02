@@ -1,6 +1,7 @@
 //! Hyper client bindings for unix domain sockets
 
 use std::io;
+use std::clone::Clone;
 
 use futures::IntoFuture;
 use futures::future::{self, FutureResult};
@@ -62,6 +63,12 @@ impl Service for UnixConnector {
                 format!("Invalid uri {}", uri),
             )),
         }
+    }
+}
+
+impl Clone for UnixConnector {
+    fn clone(&self) -> Self {
+        UnixConnector(self.0.clone())
     }
 }
 
