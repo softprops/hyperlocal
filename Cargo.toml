@@ -7,6 +7,7 @@ homepage = "https://github.com/softprops/hyperlocal"
 repository = "https://github.com/softprops/hyperlocal"
 keywords = ["hyper", "unix", "sockets", "http"]
 license = "MIT"
+readme = "README.md"
 
 [dependencies]
 futures = "0.1"
