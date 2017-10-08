@@ -1,3 +1,7 @@
+# 0.4.1
+
+* implement Clone for `UnixConnector` [@letmutx](https://github.com/softprops/hyperlocal/pull/7)
+
 # 0.4.0
 
 * refactor for async hyper
