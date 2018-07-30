@@ -7,33 +7,31 @@ use std::io::{self, Write};
 
 use futures::Stream;
 use futures::Future;
-use hyper::{Client, Result};
+use hyper::{Client, rt};
 use hyperlocal::{Uri, UnixConnector};
-use tokio_core::reactor::Core;
 
-fn run() -> Result<()> {
-    let mut core = Core::new()?;
-    let handle = core.handle();
-    let client = Client::configure()
-        .connector(UnixConnector::new(handle))
-        .build(&core.handle());
+fn main() {
+    let client = Client::builder().
+        build::<_, ::hyper::Body>(UnixConnector::new());
+    let url = Uri::new("test.sock", "/").into();
+
     let work = client
-        .get(Uri::new("test.sock", "/").into())
+        .get(url)
         .and_then(|res| {
             println!("Response: {}", res.status());
-            println!("Headers: \n{}", res.headers());
+            println!("Headers: {:#?}", res.headers());
 
-            res.body().for_each(|chunk| {
-                io::stdout().write_all(&chunk).map_err(From::from)
+            res.into_body().for_each(|chunk| {
+                io::stdout().write_all(&chunk)
+                    .map_err(|e| panic!("example expects stdout is open, error={}", e))
             })
         })
         .map(|_| {
             println!("\n\nDone.");
+        })
+        .map_err(|err| {
+            eprintln!("Error {}", err);
         });
 
-    core.run(work)
-}
-
-fn main() {
-    run().unwrap()
+    rt::run(work);
 }
