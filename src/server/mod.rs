@@ -40,7 +40,6 @@ where
             new_service,
             mut core,
             listener,
-            ..
         } = self;
 
         let server = listener.incoming().for_each(move |sock| {
