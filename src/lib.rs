@@ -4,20 +4,20 @@
 //! See the `hyperlocal::UnixConnector` docs for how to configure hyper clients and the `hyperlocal::server::Http` docs
 //! for how to configure hyper servers
 extern crate futures;
+extern crate hex;
 extern crate hyper;
-extern crate tokio_uds;
 extern crate tokio_core;
 extern crate tokio_io;
-extern crate hex;
+extern crate tokio_uds;
 
 use std::borrow::Cow;
 use std::path::Path;
 
-use hyper::Uri as HyperUri;
 use hex::{FromHex, ToHex};
+use hyper::Uri as HyperUri;
 
-pub mod server;
 pub mod client;
+pub mod server;
 pub use client::UnixConnector;
 
 /// A type which implements `Into` for hyper's  `hyper::Uri` type
@@ -57,7 +57,9 @@ impl<'a> Uri<'a> {
     {
         let host = socket.as_ref().to_string_lossy().as_bytes().to_hex();
         let host_str = format!("unix://{}:0{}", host, path);
-        Uri { encoded: Cow::Owned(host_str) }
+        Uri {
+            encoded: Cow::Owned(host_str),
+        }
     }
 
     // fixme: would like to just use hyper::Result and hyper::error::UriError here
@@ -66,18 +68,20 @@ impl<'a> Uri<'a> {
         uri.host()
             .iter()
             .filter_map(|host| {
-                Vec::from_hex(host).ok().map(|raw| {
-                    String::from_utf8_lossy(&raw).into_owned()
-                })
+                Vec::from_hex(host)
+                    .ok()
+                    .map(|raw| String::from_utf8_lossy(&raw).into_owned())
             })
             .next()
     }
 
     fn socket_path_dest(dest: &hyper::client::connect::Destination) -> Option<String> {
-        format!("unix://{}", dest.host()).parse().ok().and_then(|uri| Self::socket_path(&uri))
+        format!("unix://{}", dest.host())
+            .parse()
+            .ok()
+            .and_then(|uri| Self::socket_path(&uri))
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -100,12 +104,17 @@ mod tests {
 
     #[test]
     fn connector_rejects_non_unix_uris() {
-        assert_eq!(None, Uri::socket_path(&"http://google.com".parse().unwrap()));
+        assert_eq!(
+            None,
+            Uri::socket_path(&"http://google.com".parse().unwrap())
+        );
     }
 
     #[test]
     fn connector_rejects_hand_crafted_unix_uris() {
-        assert_eq!(None, Uri::socket_path(&"unix://google.com".parse().unwrap()));
+        assert_eq!(
+            None,
+            Uri::socket_path(&"unix://google.com".parse().unwrap())
+        );
     }
 }
-

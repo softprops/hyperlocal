@@ -1,20 +1,23 @@
+extern crate futures;
 extern crate hyper;
 extern crate hyperlocal;
-extern crate futures;
 
-use hyper::{header, Body, Request, Response};
 use hyper::service::service_fn;
+use hyper::{header, Body, Request, Response};
 use std::io;
 
 const PHRASE: &'static str = "It's a Unix system. I know this.";
 
-fn hello(_: Request<Body>) -> impl futures::Future<Item = Response<Body>, Error = io::Error> + Send {
+fn hello(
+    req: Request<Body>,
+) -> impl futures::Future<Item = Response<Body>, Error = io::Error> + Send {
+    println!("servicing new request {:?}", req);
     futures::future::ok(
         Response::builder()
             .header(header::CONTENT_TYPE, "text/plain")
             .header(header::CONTENT_LENGTH, PHRASE.len() as u64)
             .body(PHRASE.into())
-            .expect("failed to create response")
+            .expect("failed to create response"),
     )
 }
 

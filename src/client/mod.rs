@@ -2,8 +2,8 @@
 
 use std::io;
 
-use futures::{Future, IntoFuture};
 use futures::future::{self, FutureResult};
+use futures::{Future, IntoFuture};
 use hyper::client::connect::{Connect, Connected, Destination};
 use tokio_uds::UnixStream;
 
@@ -60,4 +60,3 @@ impl Connect for UnixConnector {
         }
     }
 }
-

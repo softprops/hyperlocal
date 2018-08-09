@@ -16,7 +16,7 @@ use tokio_uds::UnixListener;
 /// which handle a connection to an HTTP server.
 pub struct Server<S>
 where
-    S: NewService<ReqBody = ::hyper::Body> + Send + 'static
+    S: NewService<ReqBody = ::hyper::Body> + Send + 'static,
 {
     new_service: S,
     core: Core,
@@ -25,7 +25,7 @@ where
 
 impl<S> Server<S>
 where
-    S: NewService<ReqBody=::hyper::Body, ResBody=::hyper::Body, Error = io::Error>
+    S: NewService<ReqBody = ::hyper::Body, ResBody = ::hyper::Body, Error = io::Error>
         + Send
         + Sync
         + 'static,
@@ -40,21 +40,26 @@ where
             ..
         } = self;
 
-        let server = listener
-            .incoming()
-            .for_each(move |sock| {
-                new_service.new_service()
-                    .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("failed to create service: {}", e)))
-                    .and_then(|service| {
-                        HyperHttp::new()
-                            .serve_connection(
-                                sock,
-                                service,
-                            ).map_err(|e| {
-                                io::Error::new(io::ErrorKind::Other, format!("failed to serve connection: {}", e))
-                            })
-                    })
-            });
+        let server = listener.incoming().for_each(move |sock| {
+            new_service
+                .new_service()
+                .map_err(|e| {
+                    io::Error::new(
+                        io::ErrorKind::Other,
+                        format!("failed to create service: {}", e),
+                    )
+                })
+                .and_then(|service| {
+                    HyperHttp::new()
+                        .serve_connection(sock, service)
+                        .map_err(|e| {
+                            io::Error::new(
+                                io::ErrorKind::Other,
+                                format!("failed to serve connection: {}", e),
+                            )
+                        })
+                })
+        });
 
         core.run(server)
     }
@@ -98,6 +103,10 @@ impl Http {
         let core = Core::new()?;
         let listener = UnixListener::bind(path.as_ref())?;
 
-        Ok(Server { core, listener, new_service })
+        Ok(Server {
+            core,
+            listener,
+            new_service,
+        })
     }
 }
