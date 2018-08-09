@@ -1,12 +1,18 @@
 //! Hyper server bindings for unix domain sockets
 
+// Std lib
+use std::error;
+use std::fmt;
 use std::io;
 use std::path::Path;
 
+// Third party
 use futures::future::Future;
 use futures::stream::Stream;
+use hyper::body::Payload;
 use hyper::server::conn::Http as HyperHttp;
-use hyper::service::NewService;
+use hyper::service::{NewService, Service};
+use hyper::Body;
 use tokio_core::reactor::Core;
 use tokio_uds::UnixListener;
 
@@ -16,7 +22,7 @@ use tokio_uds::UnixListener;
 /// which handle a connection to an HTTP server.
 pub struct Server<S>
 where
-    S: NewService<ReqBody = ::hyper::Body> + Send + 'static,
+    S: NewService<ReqBody = Body> + Send + 'static,
 {
     new_service: S,
     core: Core,
@@ -25,12 +31,9 @@ where
 
 impl<S> Server<S>
 where
-    S: NewService<ReqBody = ::hyper::Body, ResBody = ::hyper::Body, Error = io::Error>
-        + Send
-        + Sync
-        + 'static,
-    S::InitError: ::std::fmt::Display,
-    <S::Service as ::hyper::service::Service>::Future: Send,
+    S: NewService<ReqBody = Body, ResBody = Body, Error = io::Error> + Send + Sync + 'static,
+    S::InitError: fmt::Display,
+    <S::Service as Service>::Future: Send,
 {
     pub fn run(self) -> io::Result<()> {
         let Server {
@@ -90,15 +93,16 @@ impl Http {
         Http
     }
 
-    /// binds a new server instance to a unix domain socket path
-    pub fn bind<P, S, B>(&self, path: P, new_service: S) -> ::std::io::Result<Server<S>>
+    /// Binds a new server instance to a unix domain socket path
+    /// If the provided path exists this method will yield an error
+    pub fn bind<P, S, B>(&self, path: P, new_service: S) -> io::Result<Server<S>>
     where
         P: AsRef<Path>,
-        S: NewService<ReqBody = ::hyper::Body, ResBody = B> + Send + 'static,
-        S::Error: Into<Box<::std::error::Error + Send + Sync>>,
+        S: NewService<ReqBody = Body, ResBody = B> + Send + 'static,
+        S::Error: Into<Box<error::Error + Send + Sync>>,
         S::Service: Send,
-        <S::Service as ::hyper::service::Service>::Future: Send + 'static,
-        B: ::hyper::body::Payload,
+        <S::Service as Service>::Future: Send + 'static,
+        B: Payload,
     {
         let core = Core::new()?;
         let listener = UnixListener::bind(path.as_ref())?;

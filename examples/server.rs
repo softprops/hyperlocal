@@ -30,5 +30,7 @@ fn run() -> io::Result<()> {
 }
 
 fn main() {
-    run().unwrap()
+    if let Err(err) = run() {
+        eprintln!("error starting server: {}", err)
+    }
 }
