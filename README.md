@@ -33,28 +33,26 @@ note the example below uses a crate called `service_fn` which exists [here](http
 extern crate hyper;
 extern crate hyperlocal;
 extern crate futures;
-extern crate tokio_service;
-extern crate service_fn;
 
-use hyper::{Result, Response};
-use hyper::header::{ContentType, ContentLength};
-use service_fn::service_fn;
+use hyper::{header, Body, Request, Response};
+use hyper::service::service_fn;
+use std::io;
 
 const PHRASE: &'static str = "It's a Unix system. I know this.";
 
-fn run() -> Result<()> {
+fn hello(_: Request<Body>) -> impl futures::Future<Item = Response<Body>, Error = io::Error> + Send {
+    futures::future::ok(
+        Response::builder()
+            .header(header::CONTENT_TYPE, "text/plain")
+            .header(header::CONTENT_LENGTH, PHRASE.len() as u64)
+            .body(PHRASE.into())
+            .expect("failed to create response")
+    )
+}
+
+fn run() -> io::Result<()> {
     let path = "test.sock";
-    let hello = || {
-        Ok(service_fn(|_| {
-            Ok(
-                Response::<hyper::Body>::new()
-                    .with_header(ContentLength(PHRASE.len() as u64))
-                    .with_header(ContentType::plaintext())
-                    .with_body(PHRASE),
-            )
-        }))
-    };
-    let svr = hyperlocal::server::Http::new().bind(path, hello)?;
+    let svr = hyperlocal::server::Http::new().bind(path, || service_fn(hello))?;
     println!("Listening on unix://{path} with 1 thread.", path = path);
     svr.run()?;
     Ok(())
@@ -87,35 +85,33 @@ use std::io::{self, Write};
 
 use futures::Stream;
 use futures::Future;
-use hyper::{Client, Result};
+use hyper::{Client, rt};
 use hyperlocal::{Uri, UnixConnector};
-use tokio_core::reactor::Core;
 
-fn run() -> Result<()> {
-    let mut core = Core::new()?;
-    let handle = core.handle();
-    let client = Client::configure()
-        .connector(UnixConnector::new(handle))
-        .build(&core.handle());
+fn main() {
+    let client = Client::builder().
+        build::<_, ::hyper::Body>(UnixConnector::new());
+    let url = Uri::new("test.sock", "/").into();
+
     let work = client
-        .get(Uri::new("test.sock", "/").into())
+        .get(url)
         .and_then(|res| {
             println!("Response: {}", res.status());
-            println!("Headers: \n{}", res.headers());
+            println!("Headers: {:#?}", res.headers());
 
-            res.body().for_each(|chunk| {
-                io::stdout().write_all(&chunk).map_err(From::from)
+            res.into_body().for_each(|chunk| {
+                io::stdout().write_all(&chunk)
+                    .map_err(|e| panic!("example expects stdout is open, error={}", e))
             })
         })
         .map(|_| {
             println!("\n\nDone.");
+        })
+        .map_err(|err| {
+            eprintln!("Error {}", err);
         });
 
-    core.run(work)
-}
-
-fn main() {
-    run().unwrap()
+    rt::run(work);
 }
 ```
 

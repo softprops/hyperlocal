@@ -8,7 +8,6 @@ extern crate hyper;
 extern crate tokio_uds;
 extern crate tokio_core;
 extern crate tokio_io;
-extern crate tokio_service;
 extern crate hex;
 
 use std::borrow::Cow;
@@ -32,14 +31,10 @@ pub use client::UnixConnector;
 /// extern crate hyper;
 /// extern crate hyperlocal;
 ///
-/// let url = hyperlocal::Uri::new(
+/// let url: hyper::Uri = hyperlocal::Uri::new(
 ///   "/path/to/socket", "/urlpath?key=value"
-///  );
-///  let req: hyper::Request<hyper::Body> =
-///    hyper::Request::new(
-///      hyper::Get,
-///      url.into()
-///    );
+///  ).into();
+///  let req = hyper::Request::get(url).body(()).unwrap();
 /// ```
 #[derive(Debug)]
 pub struct Uri<'a> {
@@ -77,6 +72,10 @@ impl<'a> Uri<'a> {
             })
             .next()
     }
+
+    fn socket_path_dest(dest: &hyper::client::connect::Destination) -> Option<String> {
+        format!("unix://{}", dest.host()).parse().ok().and_then(|uri| Self::socket_path(&uri))
+    }
 }
 
 
@@ -94,9 +93,19 @@ mod tests {
 
     #[test]
     fn unix_uris_resolve_socket_path() {
-        let unix: HyperUri = "unix://666f6f2e736f636b:0/".parse().unwrap();
-        let path = Uri::socket_path(&unix).unwrap();
+        let path = Uri::socket_path(&"unix://666f6f2e736f636b:0/".parse().unwrap()).unwrap();
         let expected = "foo.sock";
         assert_eq!(path, expected);
     }
+
+    #[test]
+    fn connector_rejects_non_unix_uris() {
+        assert_eq!(None, Uri::socket_path(&"http://google.com".parse().unwrap()));
+    }
+
+    #[test]
+    fn connector_rejects_hand_crafted_unix_uris() {
+        assert_eq!(None, Uri::socket_path(&"unix://google.com".parse().unwrap()));
+    }
 }
+

@@ -1,63 +1,62 @@
 //! Hyper server bindings for unix domain sockets
 
-use std::marker::PhantomData;
+use std::io;
 use std::path::Path;
 
 use futures::future::Future;
 use futures::stream::Stream;
-use hyper::{Request, Response};
-use hyper::server::Http as HyperHttp;
+use hyper::server::conn::Http as HyperHttp;
+use hyper::service::NewService;
 use tokio_core::reactor::Core;
-use tokio_service::NewService;
 use tokio_uds::UnixListener;
 
 /// An instance of a server created through `Http::bind`.
 //
 /// This structure is used to create instances of Servers to spawn off tasks
 /// which handle a connection to an HTTP server.
-pub struct Server<S, B>
+pub struct Server<S>
 where
-    B: Stream<Error = ::hyper::Error>,
-    B::Item: AsRef<[u8]>,
+    S: NewService<ReqBody = ::hyper::Body> + Send + 'static
 {
-    protocol: HyperHttp<B::Item>,
     new_service: S,
     core: Core,
     listener: UnixListener,
 }
 
-impl<S, B> Server<S, B>
+impl<S> Server<S>
 where
-    S: NewService<Request = Request, Response = Response<B>, Error = ::hyper::Error>
+    S: NewService<ReqBody=::hyper::Body, ResBody=::hyper::Body, Error = io::Error>
         + Send
         + Sync
         + 'static,
-    B: Stream<Error = ::hyper::Error> + 'static,
-    B::Item: AsRef<[u8]>,
+    S::InitError: ::std::fmt::Display,
+    <S::Service as ::hyper::service::Service>::Future: Send,
 {
-    pub fn run(self) -> ::hyper::Result<()> {
+    pub fn run(self) -> io::Result<()> {
         let Server {
-            protocol,
             new_service,
             mut core,
             listener,
             ..
         } = self;
-        let handle = core.handle();
+
         let server = listener
             .incoming()
-            .for_each(move |(sock, _)| {
-                protocol.bind_connection(
-                    &handle,
-                    sock,
-                    ([127, 0, 0, 1], 0).into(),
-                    new_service.new_service()?,
-                );
-                Ok(())
-            })
-            .map_err(|_| ());
-        core.run(server);
-        Ok(())
+            .for_each(move |sock| {
+                new_service.new_service()
+                    .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("failed to create service: {}", e)))
+                    .and_then(|service| {
+                        HyperHttp::new()
+                            .serve_connection(
+                                sock,
+                                service,
+                            ).map_err(|e| {
+                                io::Error::new(io::ErrorKind::Other, format!("failed to serve connection: {}", e))
+                            })
+                    })
+            });
+
+        core.run(server)
     }
 }
 
@@ -76,42 +75,29 @@ where
 /// //)
 ///
 /// ```
-pub struct Http<B = ::hyper::Chunk> {
-    _marker: PhantomData<B>,
-}
+#[derive(Clone)]
+pub struct Http;
 
-impl<B> Clone for Http<B> {
-    fn clone(&self) -> Http<B> {
-        Http { ..*self }
-    }
-}
-
-impl<B: AsRef<[u8]> + 'static> Http<B> {
+impl Http {
     /// Creates a new instance of the HTTP protocol, ready to spawn a server or
     /// start accepting connections.
-    pub fn new() -> Http<B> {
-        Http { _marker: PhantomData }
+    pub fn new() -> Self {
+        Http
     }
 
     /// binds a new server instance to a unix domain socket path
-    pub fn bind<P, S, Bd>(&self, path: P, new_service: S) -> ::hyper::Result<Server<S, Bd>>
+    pub fn bind<P, S, B>(&self, path: P, new_service: S) -> ::std::io::Result<Server<S>>
     where
         P: AsRef<Path>,
-        S: NewService<Request = Request, Response = Response<Bd>, Error = ::hyper::Error>
-            + Send
-            + Sync
-            + 'static,
-        Bd: Stream<Item = B, Error = ::hyper::Error> + 'static,
+        S: NewService<ReqBody = ::hyper::Body, ResBody = B> + Send + 'static,
+        S::Error: Into<Box<::std::error::Error + Send + Sync>>,
+        S::Service: Send,
+        <S::Service as ::hyper::service::Service>::Future: Send + 'static,
+        B: ::hyper::body::Payload,
     {
         let core = Core::new()?;
-        let handle = core.handle();
-        let listener = UnixListener::bind(path.as_ref(), &handle)?;
+        let listener = UnixListener::bind(path.as_ref())?;
 
-        Ok(Server {
-            protocol: HyperHttp::new(),
-            new_service: new_service,
-            core: core,
-            listener: listener,
-        })
+        Ok(Server { core, listener, new_service })
     }
 }
