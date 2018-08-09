@@ -1,7 +1,9 @@
 //! Hyper client bindings for unix domain sockets
 
+// Std lib
 use std::io;
 
+// Third party
 use futures::future::{self, FutureResult};
 use futures::{Future, IntoFuture};
 use hyper::client::connect::{Connect, Connected, Destination};
