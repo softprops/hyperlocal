@@ -1,7 +1,4 @@
-# hyperlocal
-
-[![Build Status](https://travis-ci.org/softprops/hyperlocal.svg?branch=master)](https://travis-ci.org/softprops/hyperlocal) [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![crates.io](http://meritbadge.herokuapp.com/hyperlocal)](https://crates.io/crates/hyperlocal)
+# hyperlocal [![Build Status](https://travis-ci.org/softprops/hyperlocal.svg?branch=master)](https://travis-ci.org/softprops/hyperlocal) [![Coverage Status](https://coveralls.io/repos/github/softprops/hyperlocal/badge.svg)](https://coveralls.io/github/softprops/hyperlocal) [![crates.io](https://img.shields.io/crates/v/hyperlocal.svg)](https://crates.io/crates/hyperlocal) [![docs.rs](https://docs.rs/hyperlocal/badge.svg)](https://docs.rs/hyperlocal) [![Master API docs](https://img.shields.io/badge/docs-master-green.svg)](https://softprops.github.io/hyperlocal)
 
 > [hyper](https://github.com/hyperium/hyper) client and server bindings for [unix domain sockets](https://github.com/tokio-rs/tokio-uds)
 
@@ -10,7 +7,6 @@ a mechanism for host-local interprocess communication. Hyperlocal builds on and 
 
 This is useful for exposing simple HTTP interfaces for your Unix daemons in cases where you want to limit access to the current host, in which case, opening and exposing tcp ports is not needed. Examples of unix daemons that provide this kind of host local interface include, [docker](https://docs.docker.com/engine/misc/), a process container manager.
 
-## [Documentation](https://softprops.github.com/hyperlocal)
 
 ## install
 
