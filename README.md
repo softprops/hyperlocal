@@ -89,8 +89,9 @@ use hyper::{Client, rt};
 use hyperlocal::{Uri, UnixConnector};
 
 fn main() {
-    let client = Client::builder().
-        build::<_, ::hyper::Body>(UnixConnector::new());
+    let client = Client::builder()
+        .keep_alive(false) // without this the connection will remain open
+        .build::<_, ::hyper::Body>(UnixConnector::new());
     let url = Uri::new("test.sock", "/").into();
 
     let work = client

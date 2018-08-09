@@ -5,14 +5,15 @@ extern crate tokio_core;
 
 use std::io::{self, Write};
 
-use futures::Stream;
 use futures::Future;
-use hyper::{Client, rt};
-use hyperlocal::{Uri, UnixConnector};
+use futures::Stream;
+use hyper::{rt, Client};
+use hyperlocal::{UnixConnector, Uri};
 
 fn main() {
-    let client = Client::builder().
-        build::<_, ::hyper::Body>(UnixConnector::new());
+    let client = Client::builder()
+        .keep_alive(false)
+        .build::<_, ::hyper::Body>(UnixConnector::new());
     let url = Uri::new("test.sock", "/").into();
 
     let work = client
@@ -22,7 +23,8 @@ fn main() {
             println!("Headers: {:#?}", res.headers());
 
             res.into_body().for_each(|chunk| {
-                io::stdout().write_all(&chunk)
+                io::stdout()
+                    .write_all(&chunk)
                     .map_err(|e| panic!("example expects stdout is open, error={}", e))
             })
         })
