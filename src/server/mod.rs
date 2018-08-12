@@ -36,7 +36,7 @@ where
     S::InitError: fmt::Display,
     <S::Service as Service>::Future: Send,
 {
-    /// Return the path name of the underlying domain socket
+    /// Return the of the underlying socket address this server is listening on
     pub fn local_addr(&self) -> io::Result<SocketAddr> {
         self.listener.local_addr()
     }
