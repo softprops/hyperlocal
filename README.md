@@ -14,7 +14,7 @@ Add the following to your `Cargo.toml` file
 
 ```toml
 [dependencies]
-hyperlocal = "0.4"
+hyperlocal = "0.5"
 ```
 
 ## usage
