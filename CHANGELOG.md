@@ -1,3 +1,8 @@
+# 0.5.0
+
+* upgrade to hyper 0.12 [#11](https://github.com/softprops/hyperlocal/pull/11)
+* expose the [SocketAddr](https://doc.rust-lang.org/std/os/unix/net/struct.SocketAddr.html) servers listen on with `Server#local_addr`
+
 # 0.4.1
 
 * implement Clone for `UnixConnector` [@letmutx](https://github.com/softprops/hyperlocal/pull/7)
