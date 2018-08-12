@@ -22,9 +22,17 @@ fn hello(
 }
 
 fn run() -> io::Result<()> {
-    let path = "test.sock";
-    let svr = hyperlocal::server::Http::new().bind(path, || service_fn(hello))?;
-    println!("Listening on unix://{path} with 1 thread.", path = path);
+    let svr = hyperlocal::server::Http::new().bind("test.sock", || service_fn(hello))?;
+
+    for path in svr.local_addr()
+        .ok()
+        .and_then(|addr| addr.as_pathname().map(|pathname| pathname.to_owned()))
+    {
+        println!(
+            "Listening on unix://{path} with 1 thread.",
+            path = path.as_path().to_string_lossy()
+        );
+    }
     svr.run()?;
     Ok(())
 }

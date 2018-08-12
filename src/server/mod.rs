@@ -4,6 +4,7 @@
 use std::error;
 use std::fmt;
 use std::io;
+use std::os::unix::net::SocketAddr;
 use std::path::Path;
 
 // Third party
@@ -35,6 +36,12 @@ where
     S::InitError: fmt::Display,
     <S::Service as Service>::Future: Send,
 {
+    /// Return the path name of the underlying domain socket
+    pub fn local_addr(&self) -> io::Result<SocketAddr> {
+        self.listener.local_addr()
+    }
+
+    /// Start listening for incomming connections
     pub fn run(self) -> io::Result<()> {
         let Server {
             new_service,
