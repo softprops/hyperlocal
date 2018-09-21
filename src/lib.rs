@@ -13,7 +13,7 @@ extern crate tokio_uds;
 use std::borrow::Cow;
 use std::path::Path;
 
-use hex::{FromHex, ToHex};
+use hex::FromHex;
 use hyper::Uri as HyperUri;
 
 pub mod client;
@@ -55,7 +55,7 @@ impl<'a> Uri<'a> {
     where
         P: AsRef<Path>,
     {
-        let host = socket.as_ref().to_string_lossy().as_bytes().to_hex();
+        let host = hex::encode(socket.as_ref().to_string_lossy().as_bytes());
         let host_str = format!("unix://{}:0{}", host, path);
         Uri {
             encoded: Cow::Owned(host_str),
