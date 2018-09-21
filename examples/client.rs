@@ -1,7 +1,6 @@
 extern crate futures;
 extern crate hyper;
 extern crate hyperlocal;
-extern crate tokio_core;
 
 use std::io::{self, Write};
 

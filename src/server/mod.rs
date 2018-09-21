@@ -14,7 +14,7 @@ use hyper::body::Payload;
 use hyper::server::conn::Http as HyperHttp;
 use hyper::service::{NewService, Service};
 use hyper::Body;
-use tokio_core::reactor::Core;
+use tokio::runtime::Runtime;
 use tokio_uds::UnixListener;
 
 /// An instance of a server created through `Http::bind`.
@@ -26,7 +26,7 @@ where
     S: NewService<ReqBody = Body> + Send + 'static,
 {
     new_service: S,
-    core: Core,
+    runtime: Runtime,
     listener: UnixListener,
 }
 
@@ -35,6 +35,8 @@ where
     S: NewService<ReqBody = Body, ResBody = Body, Error = io::Error> + Send + Sync + 'static,
     S::InitError: fmt::Display,
     <S::Service as Service>::Future: Send,
+    <S as NewService>::Service: Send,
+    <S as NewService>::Future: Send,
 {
     /// Return the of the underlying socket address this server is listening on
     pub fn local_addr(&self) -> io::Result<SocketAddr> {
@@ -45,7 +47,7 @@ where
     pub fn run(self) -> io::Result<()> {
         let Server {
             new_service,
-            mut core,
+            runtime,
             listener,
         } = self;
 
@@ -57,8 +59,7 @@ where
                         io::ErrorKind::Other,
                         format!("failed to create service: {}", e),
                     )
-                })
-                .and_then(|service| {
+                }).and_then(|service| {
                     HyperHttp::new()
                         .serve_connection(sock, service)
                         .map_err(|e| {
@@ -70,7 +71,8 @@ where
                 })
         });
 
-        core.run(server)
+        // ::hyper::rt::run(server)
+        runtime.block_on_all(server)
     }
 }
 
@@ -110,11 +112,11 @@ impl Http {
         <S::Service as Service>::Future: Send + 'static,
         B: Payload,
     {
-        let core = Core::new()?;
+        let runtime = Runtime::new()?;
         let listener = UnixListener::bind(path.as_ref())?;
 
         Ok(Server {
-            core,
+            runtime,
             listener,
             new_service,
         })
