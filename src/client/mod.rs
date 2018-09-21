@@ -4,10 +4,9 @@
 use std::io;
 
 // Third party
-use futures::future::{self, FutureResult};
-use futures::{Future, IntoFuture};
+use futures::{Async, Future, Poll};
 use hyper::client::connect::{Connect, Connected, Destination};
-use tokio_uds::UnixStream;
+use tokio_uds::{ConnectFuture as StreamConnectFuture, UnixStream};
 
 use super::Uri;
 
@@ -41,24 +40,53 @@ impl UnixConnector {
 impl Connect for UnixConnector {
     type Transport = UnixStream;
     type Error = io::Error;
-    type Future = FutureResult<(UnixStream, Connected), io::Error>;
+    type Future = ConnectFuture;
 
     fn connect(&self, destination: Destination) -> Self::Future {
-        if destination.scheme() != UNIX_SCHEME {
-            return future::err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                format!("Invalid uri {:?}", destination),
-            ));
-        }
-        match Uri::socket_path_dest(&destination) {
-            Some(ref path) => UnixStream::connect(path)
-                                .wait() // We have to block because we
-                                .map(|s| (s, Connected::new()))
-                                .into_future(),
-            _ => future::err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                format!("Invalid uri {:?}", destination),
-            )),
+        ConnectFuture::Start(destination)
+    }
+}
+
+pub enum ConnectFuture {
+    Start(Destination),
+    Connect(StreamConnectFuture),
+}
+
+impl Future for ConnectFuture {
+    type Item = (UnixStream, Connected);
+    type Error = io::Error;
+
+    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
+        loop {
+            let next_state = match self {
+                ConnectFuture::Start(destination) => {
+                    if destination.scheme() != UNIX_SCHEME {
+                        return Err(io::Error::new(
+                            io::ErrorKind::InvalidInput,
+                            format!("Invalid uri {:?}", destination),
+                        ));
+                    }
+
+                    let path = match Uri::socket_path_dest(&destination) {
+                        Some(path) => path,
+
+                        None => return Err(io::Error::new(
+                            io::ErrorKind::InvalidInput,
+                            format!("Invalid uri {:?}", destination),
+                        )),
+                    };
+
+                    ConnectFuture::Connect(UnixStream::connect(&path))
+                },
+
+                ConnectFuture::Connect(f) => match f.poll() {
+                    Ok(Async::Ready(stream)) => return Ok(Async::Ready((stream, Connected::new()))),
+                    Ok(Async::NotReady) => return Ok(Async::NotReady),
+                    Err(err) => return Err(err),
+                },
+            };
+
+            *self = next_state;
         }
     }
 }
