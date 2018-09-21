@@ -11,7 +11,7 @@ readme = "README.md"
 
 [dependencies]
 futures = "0.1"
-hex = "0.2"
+hex = "0.3"
 hyper = "0.12"
 tokio = "0.1"
 tokio-io = "0.1"
