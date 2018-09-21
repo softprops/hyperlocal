@@ -3,6 +3,7 @@
 //!
 //! See the `hyperlocal::UnixConnector` docs for how to configure hyper clients and the `hyperlocal::server::Http` docs
 //! for how to configure hyper servers
+
 extern crate futures;
 extern crate hex;
 extern crate hyper;
