@@ -23,6 +23,7 @@ addons:
       - libssl-dev
 
 install: |
+  rustup toolchain install nightly
   if [[ "$TRAVIS_RUST_VERSION" == stable ]] && [[ $(cargo +nightly tarpaulin --version) != *0.6.2 ]]; then
     `RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo +nightly install  --force --version 0.6.2  cargo-tarpaulin`
   fi
