@@ -4,7 +4,7 @@ extern crate hyperlocal;
 
 use hyper::service::service_fn;
 use hyper::{header, Body, Request, Response};
-use std::io;
+use std::{fs, io};
 
 const PHRASE: &'static str = "It's a Unix system. I know this.";
 
@@ -22,17 +22,22 @@ fn hello(
 }
 
 fn run() -> io::Result<()> {
-    let svr = hyperlocal::server::Http::new().bind("test.sock", || service_fn(hello))?;
+    match fs::remove_file("test.sock") {
+        Ok(()) => (),
+        Err(ref err) if err.kind() == io::ErrorKind::NotFound => (),
+        Err(err) => panic!("{}", err),
+    }
 
-    for path in svr.local_addr()
-        .ok()
-        .and_then(|addr| addr.as_pathname().map(|pathname| pathname.to_owned()))
+    let svr = hyperlocal::server::Server::bind("test.sock", || service_fn(hello))?;
+
     {
+        let path = svr.local_addr().as_pathname().unwrap();
         println!(
             "Listening on unix://{path} with 1 thread.",
-            path = path.as_path().to_string_lossy()
+            path = path.to_string_lossy(),
         );
     }
+
     svr.run()?;
     Ok(())
 }
