@@ -12,9 +12,12 @@ matrix:
 script:
   - cargo test
 
+# Cache `cargo install`ed tools, but don't cache the project's `target`
+# directory (which ends up over-caching and filling all disk space!)
+# https://levans.fr/rust_travis_cache.html
 cache:
-  cargo: true
-  apt: true
+  directories:
+    - /home/travis/.cargo
 
 addons:
   apt:
