@@ -1,3 +1,10 @@
+# 0.6.0
+
+* upgrade hex to 0.3 [#15](https://github.com/softprops/hyperlocal/pull/15)
+* move from tokio-core to tokio 0.1 [#16](https://github.com/softprops/hyperlocal/pull/16)
+* don't explicitly block on unix socket connection [#18](https://github.com/softprops/hyperlocal/pull/18)
+* provide a more flexible set of Server interface [#19](https://github.com/softprops/hyperlocal/pull/19)
+
 # 0.5.0
 
 * upgrade to hyper 0.12 [#11](https://github.com/softprops/hyperlocal/pull/11)
