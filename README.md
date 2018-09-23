@@ -30,9 +30,11 @@ extern crate hyper;
 extern crate hyperlocal;
 extern crate futures;
 
+use std::fs;
+use std::io;
+
 use hyper::{header, Body, Request, Response};
 use hyper::service::service_fn;
-use std::io;
 
 const PHRASE: &'static str = "It's a Unix system. I know this.";
 
@@ -48,6 +50,11 @@ fn hello(_: Request<Body>) -> impl futures::Future<Item = Response<Body>, Error 
 
 fn run() -> io::Result<()> {
     let path = "test.sock";
+    if let Err(err) = fs::remove_file("test.sock") {
+        if err.kind() != io::ErrorKind::NotFound {
+            panic!("{}", err)
+        }
+    }
     let svr = hyperlocal::server::Http::new().bind(path, || service_fn(hello))?;
     println!("Listening on unix://{path} with 1 thread.", path = path);
     svr.run()?;
@@ -55,7 +62,9 @@ fn run() -> io::Result<()> {
 }
 
 fn main() {
-    run().unwrap()
+    if let Err(err) = run() {
+        eprintln!("error starting server: {}", err)
+    }
 }
 ```
 

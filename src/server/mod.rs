@@ -25,15 +25,15 @@ use tokio_uds::{Incoming as UnixIncoming, UnixListener, UnixStream};
 /// extern crate hyperlocal;
 ///
 /// use hyper::service::service_fn;
-/// use hyperlocal::server::Server as UdsServer;
+/// use hyperlocal::server::Server;
 ///
-/// # match std::fs::remove_file("hyperlocal_test_echo_server_1.sock") {
-/// #     Ok(()) => (),
-/// #     Err(ref err) if err.kind() == std::io::ErrorKind::NotFound => (),
-/// #     Err(err) => panic!("{}", err),
+/// # if let Err(err) = std::fs::remove_file("hyperlocal_test_echo_server_1.sock") {
+/// #   if err.kind() != std::io::ErrorKind::NotFound {
+/// #     panic!("{}", err)
+/// #   }
 /// # }
 /// #
-/// let echo_server = UdsServer::bind(
+/// let echo_server = Server::bind(
 ///    "hyperlocal_test_echo_server_1.sock",
 ///    || service_fn(|req| Ok::<_, hyper::Error>(hyper::Response::new(req.into_body())))
 /// ).unwrap();
@@ -57,9 +57,7 @@ impl<S> Server<S> {
     {
         let protocol = Http::new();
         let serve = protocol.serve_path(path, new_service)?;
-        Ok(Server {
-            serve,
-        })
+        Ok(Server { serve })
     }
 
     /// Return the local address of the underlying socket that this server is listening on.
@@ -79,23 +77,23 @@ impl<S> Server<S> {
     {
         let runtime = Runtime::new()?;
 
-        runtime.block_on_all(
-            self.serve.for_each(|connecting| {
-                connecting
+        runtime.block_on_all(self.serve.for_each(|connecting| {
+            connecting
                 .map_err(|e| {
                     io::Error::new(
                         io::ErrorKind::Other,
                         format!("failed to serve connection: {}", e),
                     )
                 })
-                .and_then(|connection| connection.map_err(|e| {
-                    io::Error::new(
-                        io::ErrorKind::Other,
-                        format!("failed to serve connection: {}", e),
-                    )
-                }))
-            })
-        )
+                .and_then(|connection| {
+                    connection.map_err(|e| {
+                        io::Error::new(
+                            io::ErrorKind::Other,
+                            format!("failed to serve connection: {}", e),
+                        )
+                    })
+                })
+        }))
     }
 }
 
@@ -124,7 +122,7 @@ where
                     stream: Some(stream),
                     protocol: self.protocol.clone(),
                 })))
-            },
+            }
             Async::Ready(None) => Ok(Async::Ready(None)),
             Async::NotReady => Ok(Async::NotReady),
         }
@@ -156,7 +154,9 @@ where
             Async::NotReady => return Ok(Async::NotReady),
         };
         let stream = self.stream.take().expect("polled after complete");
-        Ok(Async::Ready(self.protocol.serve_connection(stream, service)))
+        Ok(Async::Ready(
+            self.protocol.serve_connection(stream, service),
+        ))
     }
 }
 
@@ -171,19 +171,24 @@ where
 /// extern crate hyper;
 /// extern crate hyperlocal;
 ///
-/// use std::os::unix::net::UnixListener as StdUnixListener;
+/// use std::os::unix::net::UnixListener;
 /// use hyper::{Response, rt::{Future, Stream}, service::service_fn};
-/// use hyperlocal::server::{Http as UdsHttp, Incoming as UdsIncoming};
+/// use hyperlocal::server::{Http, Incoming};
 ///
-/// # match std::fs::remove_file("hyperlocal_test_echo_server_2.sock") {
-/// #     Ok(()) => (),
-/// #     Err(ref err) if err.kind() == std::io::ErrorKind::NotFound => (),
-/// #     Err(err) => panic!("{}", err),
+/// # if let Err(err) =  std::fs::remove_file("hyperlocal_test_echo_server_2.sock") {
+/// #   if err.kind() != std::io::ErrorKind::NotFound {
+/// #     panic!("{}", err);
+/// #   }
 /// # }
 /// #
-/// let listener = StdUnixListener::bind("hyperlocal_test_echo_server_2.sock").unwrap();
-/// let incoming = UdsIncoming::from_std(listener, &Default::default()).unwrap();
-/// let serve = UdsHttp::new().serve_incoming(incoming, move || service_fn(|req| Ok::<_, hyper::Error>(Response::new(req.into_body()))));
+/// let listener = UnixListener::bind("hyperlocal_test_echo_server_2.sock").unwrap();
+/// let incoming = Incoming::from_std(listener, &Default::default()).unwrap();
+/// let serve = Http::new().serve_incoming(
+///   incoming,
+///   move || service_fn(
+///     |req| Ok::<_, hyper::Error>(Response::new(req.into_body()))
+///   )
+///  );
 ///
 /// let server = serve.for_each(|connecting| {
 ///     connecting
@@ -215,9 +220,7 @@ impl Http {
     /// Creates a new instance of the HTTP protocol using the given hyper `Http`,
     /// ready to spawn a server or start accepting connections.
     pub fn from_hyper(hyper_http: HyperHttp) -> Self {
-        Http {
-            inner: hyper_http,
-        }
+        Http { inner: hyper_http }
     }
 
     /// Bind the provided `path` with the default `Handle` and return `Serve`.
@@ -249,7 +252,12 @@ impl Http {
     /// connection.
     ///
     /// If the provided path already exists, this method will return an error.
-    pub fn serve_path_handle<P, S>(&self, path: P, handle: &Handle, new_service: S) -> io::Result<Serve<S>>
+    pub fn serve_path_handle<P, S>(
+        &self,
+        path: P,
+        handle: &Handle,
+        new_service: S,
+    ) -> io::Result<Serve<S>>
     where
         P: AsRef<Path>,
         S: NewService<ReqBody = Body> + Send + 'static,
@@ -293,14 +301,17 @@ impl Incoming {
     /// Bind a listener to the provided `path` with the provided `Handle`.
     ///
     /// If the `Handle` is `None`, the current runtime handle is used.
-    pub fn new<P>(path: P, handle: Option<&Handle>) -> io::Result<Self> where P: AsRef<Path> {
+    pub fn new<P>(path: P, handle: Option<&Handle>) -> io::Result<Self>
+    where
+        P: AsRef<Path>,
+    {
         let listener = StdUnixListener::bind(path)?;
         match handle {
             Some(handle) => Incoming::from_std(listener, handle),
             None => {
                 let handle = Handle::current();
                 Incoming::from_std(listener, &handle)
-            },
+            }
         }
     }
 
@@ -309,10 +320,7 @@ impl Incoming {
         let listener = UnixListener::from_std(listener, handle)?;
         let local_addr = listener.local_addr()?;
         let inner = listener.incoming();
-        Ok(Incoming {
-            inner,
-            local_addr,
-        })
+        Ok(Incoming { inner, local_addr })
     }
 
     /// Get the local address bound to this listener.

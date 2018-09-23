@@ -15,8 +15,8 @@ const UNIX_SCHEME: &str = "unix";
 /// A type which implements hyper's client connector interface
 /// for unix domain sockets
 ///
-/// `UnixConnector` instances assume uri's
-/// constructued with `hyperlocal::Uri::new()` which produce uris with a `unix://`
+/// `UnixConnector` instances expects uri's
+/// to be constructued with `hyperlocal::Uri::new()` which produce uris with a `unix://`
 /// scheme
 ///
 /// # examples
@@ -70,14 +70,16 @@ impl Future for ConnectFuture {
                     let path = match Uri::socket_path_dest(&destination) {
                         Some(path) => path,
 
-                        None => return Err(io::Error::new(
-                            io::ErrorKind::InvalidInput,
-                            format!("Invalid uri {:?}", destination),
-                        )),
+                        None => {
+                            return Err(io::Error::new(
+                                io::ErrorKind::InvalidInput,
+                                format!("Invalid uri {:?}", destination),
+                            ))
+                        }
                     };
 
                     ConnectFuture::Connect(UnixStream::connect(&path))
-                },
+                }
 
                 ConnectFuture::Connect(f) => match f.poll() {
                     Ok(Async::Ready(stream)) => return Ok(Async::Ready((stream, Connected::new()))),

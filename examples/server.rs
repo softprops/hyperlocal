@@ -22,10 +22,10 @@ fn hello(
 }
 
 fn run() -> io::Result<()> {
-    match fs::remove_file("test.sock") {
-        Ok(()) => (),
-        Err(ref err) if err.kind() == io::ErrorKind::NotFound => (),
-        Err(err) => panic!("{}", err),
+    if let Err(err) = fs::remove_file("test.sock") {
+        if err.kind() != io::ErrorKind::NotFound {
+            panic!("{}", err)
+        }
     }
 
     let svr = hyperlocal::server::Server::bind("test.sock", || service_fn(hello))?;
