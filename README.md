@@ -52,7 +52,7 @@ fn run() -> io::Result<()> {
     let path = "test.sock";
     if let Err(err) = fs::remove_file("test.sock") {
         if err.kind() != io::ErrorKind::NotFound {
-            panic!("{}", err)
+            return Err(err);
         }
     }
     let svr = hyperlocal::server::Http::new().bind(path, || service_fn(hello))?;

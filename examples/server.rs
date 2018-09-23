@@ -24,7 +24,7 @@ fn hello(
 fn run() -> io::Result<()> {
     if let Err(err) = fs::remove_file("test.sock") {
         if err.kind() != io::ErrorKind::NotFound {
-            panic!("{}", err)
+            return Err(err);
         }
     }
 
