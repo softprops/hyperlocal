@@ -21,9 +21,7 @@ hyperlocal = "0.5"
 
 ### servers
 
-A typical server can be built with `hyperlocal::server::Http`
-
-note the example below uses a crate called `service_fn` which exists [here](https://github.com/tokio-rs/service-fn) but is not yet published to crates.io
+A typical server can be built with `hyperlocal::server::Server`
 
 ```rust
 extern crate hyper;
@@ -55,7 +53,7 @@ fn run() -> io::Result<()> {
             return Err(err);
         }
     }
-    let svr = hyperlocal::server::Http::new().bind(path, || service_fn(hello))?;
+    let svr = hyperlocal::server::Server::new().bind(path, || service_fn(hello))?;
     println!("Listening on unix://{path} with 1 thread.", path = path);
     svr.run()?;
     Ok(())

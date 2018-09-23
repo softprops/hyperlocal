@@ -3,7 +3,10 @@
 * upgrade hex to 0.3 [#15](https://github.com/softprops/hyperlocal/pull/15)
 * move from tokio-core to tokio 0.1 [#16](https://github.com/softprops/hyperlocal/pull/16)
 * don't explicitly block on unix socket connection [#18](https://github.com/softprops/hyperlocal/pull/18)
-* provide a more flexible set of Server interface [#19](https://github.com/softprops/hyperlocal/pull/19)
+* provide a more flexible set of Server interfaces and to align more closely with those of hyper's default server bindings [#19](https://github.com/softprops/hyperlocal/pull/19)
+
+You'll want to use `hyperlocal::server::Server` where you would have used and `hyperlocal::server::Http` in the past and use
+`hyperlocal::server::Http` for a lower level interfaces that give you more control over "driving" your server.
 
 # 0.5.0
 
