@@ -48,12 +48,12 @@ fn hello(_: Request<Body>) -> impl futures::Future<Item = Response<Body>, Error 
 
 fn run() -> io::Result<()> {
     let path = "test.sock";
-    if let Err(err) = fs::remove_file("test.sock") {
+    if let Err(err) = fs::remove_file(path) {
         if err.kind() != io::ErrorKind::NotFound {
             return Err(err);
         }
     }
-    let svr = hyperlocal::server::Server::new().bind(path, || service_fn(hello))?;
+    let svr = hyperlocal::server::Server::bind(path, || service_fn(hello))?;
     println!("Listening on unix://{path} with 1 thread.", path = path);
     svr.run()?;
     Ok(())
