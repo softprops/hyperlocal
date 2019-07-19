@@ -1,11 +1,7 @@
-extern crate futures;
-extern crate hyper;
-extern crate hyperlocal;
-
 use std::io::{self, Write};
 
-use futures::Future;
-use futures::Stream;
+use futures01::Future;
+use futures01::Stream;
 use hyper::{rt, Client};
 use hyperlocal::{UnixConnector, Uri};
 

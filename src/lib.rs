@@ -4,13 +4,6 @@
 //! See the `hyperlocal::UnixConnector` docs for how to configure hyper clients and the `hyperlocal::server::Http` docs
 //! for how to configure hyper servers
 
-extern crate futures;
-extern crate hex;
-extern crate hyper;
-extern crate tokio;
-extern crate tokio_io;
-extern crate tokio_uds;
-
 use std::borrow::Cow;
 use std::path::Path;
 

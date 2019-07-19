@@ -26,7 +26,7 @@ A typical server can be built with `hyperlocal::server::Server`
 ```rust
 extern crate hyper;
 extern crate hyperlocal;
-extern crate futures;
+extern crate futures01;
 
 use std::fs;
 use std::io;
@@ -36,8 +36,8 @@ use hyper::service::service_fn;
 
 const PHRASE: &'static str = "It's a Unix system. I know this.";
 
-fn hello(_: Request<Body>) -> impl futures::Future<Item = Response<Body>, Error = io::Error> + Send {
-    futures::future::ok(
+fn hello(_: Request<Body>) -> impl futures01::Future<Item = Response<Body>, Error = io::Error> + Send {
+    futures01::future::ok(
         Response::builder()
             .header(header::CONTENT_TYPE, "text/plain")
             .header(header::CONTENT_LENGTH, PHRASE.len() as u64)
@@ -79,15 +79,15 @@ your standard url string won't do. Instead, use a `hyperlocal::Uri`
 which represents both file path to the domain socket and the resource uri path and query string.
 
 ```rust
-extern crate futures;
+extern crate futures01;
 extern crate hyper;
 extern crate hyperlocal;
 extern crate tokio_core;
 
 use std::io::{self, Write};
 
-use futures::Stream;
-use futures::Future;
+use futures01::Stream;
+use futures01::Future;
 use hyper::{Client, rt};
 use hyperlocal::{Uri, UnixConnector};
 

@@ -1,7 +1,3 @@
-extern crate futures;
-extern crate hyper;
-extern crate hyperlocal;
-
 use hyper::service::service_fn;
 use hyper::{header, Body, Request, Response};
 use std::{fs, io};
@@ -10,9 +6,9 @@ const PHRASE: &'static str = "It's a Unix system. I know this.";
 
 fn hello(
     req: Request<Body>,
-) -> impl futures::Future<Item = Response<Body>, Error = io::Error> + Send {
+) -> impl futures01::Future<Item = Response<Body>, Error = io::Error> + Send {
     println!("servicing new request {:?}", req);
-    futures::future::ok(
+    futures01::future::ok(
         Response::builder()
             .header(header::CONTENT_TYPE, "text/plain")
             .header(header::CONTENT_LENGTH, PHRASE.len() as u64)

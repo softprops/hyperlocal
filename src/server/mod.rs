@@ -8,7 +8,7 @@ use std::os::unix::net::{SocketAddr, UnixListener as StdUnixListener};
 use std::path::Path;
 
 // Third party
-use futures::{Async, Future, Poll, Stream};
+use futures01::{Async, Future, Poll, Stream};
 use hyper::body::Payload;
 use hyper::server::conn::{Connection as HyperConnection, Http as HyperHttp};
 use hyper::service::{NewService, Service};
@@ -309,7 +309,7 @@ impl Incoming {
         match handle {
             Some(handle) => Incoming::from_std(listener, handle),
             None => {
-                let handle = Handle::current();
+                let handle = Handle::default();
                 Incoming::from_std(listener, &handle)
             }
         }

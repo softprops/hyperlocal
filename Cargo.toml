@@ -8,9 +8,11 @@ repository = "https://github.com/softprops/hyperlocal"
 keywords = ["hyper", "unix", "sockets", "http"]
 license = "MIT"
 readme = "README.md"
+edition = "2018"
 
 [dependencies]
-futures = "0.1"
+futures01 = { package = "futures", version = "0.1" }
+futures-preview = { version = "0.3.0-alpha.17", features = ["compat"] }
 hex = "0.3"
 hyper = "0.12"
 tokio = "0.1"

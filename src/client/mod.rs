@@ -4,7 +4,7 @@
 use std::io;
 
 // Third party
-use futures::{Async, Future, Poll};
+use futures01::{Async, Future, Poll};
 use hyper::client::connect::{Connect, Connected, Destination};
 use tokio_uds::{ConnectFuture as StreamConnectFuture, UnixStream};
 
