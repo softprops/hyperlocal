@@ -5,9 +5,12 @@ language: rust
 matrix:
   fast_finish: true
   include:
-  - rust: nightly
-  - rust: beta
-  - rust: stable
+    - rust: nightly
+    - rust: beta
+    - rust: stable
+  allow_failures:
+    - rust: beta
+    - rust: stable
 
 script:
   - cargo test
