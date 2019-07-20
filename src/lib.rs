@@ -8,10 +8,11 @@
 //! docs for how to configure servers.
 
 use std::borrow::Cow;
-use std::path::Path;
+use std::io;
+use std::path::{Path, PathBuf};
 
 use hex::FromHex;
-use hyper::{client::connect::Destination, Uri as HyperUri};
+use hyper::Uri as HyperUri;
 
 pub mod client;
 pub use client::UnixConnector;
@@ -48,10 +49,7 @@ impl<'a> Into<HyperUri> for Uri<'a> {
 impl<'a> Uri<'a> {
     /// Productes a new `Uri` from path to domain socket and request path.
     /// request path should include a leading slash
-    pub fn new<P>(socket: P, path: &'a str) -> Self
-    where
-        P: AsRef<Path>,
-    {
+    pub fn new(socket: impl AsRef<Path>, path: &'a str) -> Self {
         let host = hex::encode(socket.as_ref().to_string_lossy().as_bytes());
         let host_str = format!("unix://{}:0{}", host, path);
         Uri {
@@ -59,24 +57,22 @@ impl<'a> Uri<'a> {
         }
     }
 
-    // fixme: would like to just use hyper::Result and hyper::error::UriError here
-    // but UriError its not exposed for external use
-    fn socket_path(uri: &HyperUri) -> Option<String> {
-        uri.host()
-            .iter()
-            .filter_map(|host| {
-                Vec::from_hex(host)
-                    .ok()
-                    .map(|raw| String::from_utf8_lossy(&raw).into_owned())
-            })
-            .next()
-    }
+    fn parse_socket_path(scheme: &str, host: &str) -> Result<PathBuf, std::io::Error> {
+        if scheme != "unix" {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "invalid URL, scheme must be unix",
+            ));
+        }
 
-    fn socket_path_dest(dest: &Destination) -> Option<String> {
-        format!("unix://{}", dest.host())
-            .parse()
-            .ok()
-            .and_then(|uri| Self::socket_path(&uri))
+        let bytes = Vec::from_hex(host).map_err(|_| {
+            io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "invalid URL, host must be a hex-encoded path",
+            )
+        })?;
+
+        Ok(PathBuf::from(String::from_utf8_lossy(&bytes).into_owned()))
     }
 }
 
@@ -86,32 +82,44 @@ mod tests {
     use hyper::Uri as HyperUri;
 
     #[test]
-    fn unix_uris_into_hyper_uris() {
+    fn test_unix_uri_into_hyper_uri() {
         let unix: HyperUri = Uri::new("foo.sock", "/").into();
         let expected: HyperUri = "unix://666f6f2e736f636b:0/".parse().unwrap();
         assert_eq!(unix, expected);
     }
 
     #[test]
-    fn unix_uris_resolve_socket_path() {
-        let path = Uri::socket_path(&"unix://666f6f2e736f636b:0/".parse().unwrap()).unwrap();
-        let expected = "foo.sock";
-        assert_eq!(path, expected);
+    fn test_hex_encoded_unix_uri() {
+        let uri: HyperUri = "unix://666f6f2e736f636b:0/".parse().unwrap();
+
+        let path = Uri::parse_socket_path(uri.scheme_str().unwrap(), uri.host().unwrap()).unwrap();
+        assert_eq!(path, PathBuf::from("foo.sock"));
     }
 
     #[test]
-    fn connector_rejects_non_unix_uris() {
-        assert_eq!(
-            None,
-            Uri::socket_path(&"http://google.com".parse().unwrap())
-        );
+    fn test_hex_encoded_non_unix_uri() {
+        let uri: HyperUri = "http://666f6f2e736f636b:0/".parse().unwrap();
+
+        let err =
+            Uri::parse_socket_path(uri.scheme_str().unwrap(), uri.host().unwrap()).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
     }
 
     #[test]
-    fn connector_rejects_hand_crafted_unix_uris() {
-        assert_eq!(
-            None,
-            Uri::socket_path(&"unix://google.com".parse().unwrap())
-        );
+    fn test_non_hex_encoded_non_unix_uri() {
+        let uri: HyperUri = "http://example.org".parse().unwrap();
+
+        let err =
+            Uri::parse_socket_path(uri.scheme_str().unwrap(), uri.host().unwrap()).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
+    }
+
+    #[test]
+    fn test_non_hex_encoded_unix_uri() {
+        let uri: HyperUri = "unix://example.org".parse().unwrap();
+
+        let err =
+            Uri::parse_socket_path(uri.scheme_str().unwrap(), uri.host().unwrap()).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
     }
 }

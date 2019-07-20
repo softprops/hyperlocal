@@ -11,8 +11,6 @@ use tokio_uds::{ConnectFuture, UnixStream};
 
 use super::Uri;
 
-const UNIX_SCHEME: &str = "unix";
-
 /// A type which implements hyper's client connector interface
 /// for unix domain sockets
 ///
@@ -38,21 +36,10 @@ impl Connect for UnixConnector {
     type Future = UnixConnecting;
 
     fn connect(&self, destination: Destination) -> Self::Future {
-        if destination.scheme() != UNIX_SCHEME {
-            return UnixConnecting::Error(Some(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "invalid URL, scheme must be unix",
-            )));
+        match Uri::parse_socket_path(destination.scheme(), destination.host()) {
+            Ok(path) => UnixConnecting::Connecting(UnixStream::connect(path)),
+            Err(err) => UnixConnecting::Error(Some(err)),
         }
-
-        if let Some(path) = Uri::socket_path_dest(&destination) {
-            return UnixConnecting::Connecting(UnixStream::connect(&path));
-        }
-
-        UnixConnecting::Error(Some(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "invalid URL, host must be a hex-encoded path",
-        )))
     }
 }
 
