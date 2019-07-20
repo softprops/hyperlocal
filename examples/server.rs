@@ -1,45 +1,34 @@
-use hyper::service::service_fn;
-use hyper::{header, Body, Request, Response};
-use std::{fs, io};
+#![feature(async_await)]
+
+use std::error::Error;
+use std::fs;
+use std::path::Path;
+
+use hyper::{
+    service::{make_service_fn, service_fn},
+    Body, Response, Server,
+};
+use hyperlocal::server::UnixServerExt;
 
 const PHRASE: &'static str = "It's a Unix system. I know this.";
 
-fn hello(
-    req: Request<Body>,
-) -> impl futures01::Future<Item = Response<Body>, Error = io::Error> + Send {
-    println!("servicing new request {:?}", req);
-    futures01::future::ok(
-        Response::builder()
-            .header(header::CONTENT_TYPE, "text/plain")
-            .header(header::CONTENT_LENGTH, PHRASE.len() as u64)
-            .body(PHRASE.into())
-            .expect("failed to create response"),
-    )
-}
+#[hyper::rt::main]
+async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+    let path = Path::new("/tmp/hyperlocal.sock");
 
-fn run() -> io::Result<()> {
-    if let Err(err) = fs::remove_file("test.sock") {
-        if err.kind() != io::ErrorKind::NotFound {
-            return Err(err);
+    if path.exists() {
+        fs::remove_file(path)?;
+    }
+
+    let make_service = make_service_fn(|_| {
+        async {
+            Ok::<_, hyper::Error>(service_fn(|_req| {
+                async { Ok::<_, hyper::Error>(Response::new(Body::from(PHRASE))) }
+            }))
         }
-    }
+    });
 
-    let svr = hyperlocal::server::Server::bind("test.sock", || service_fn(hello))?;
+    Server::bind_unix(path).serve(make_service).await?;
 
-    {
-        let path = svr.local_addr().as_pathname().unwrap();
-        println!(
-            "Listening on unix://{path} with 1 thread.",
-            path = path.to_string_lossy(),
-        );
-    }
-
-    svr.run()?;
     Ok(())
-}
-
-fn main() {
-    if let Err(err) = run() {
-        eprintln!("error starting server: {}", err)
-    }
 }

@@ -1,34 +1,37 @@
-//! hyperlocal provides [hyper](http://github.com/hyperium/hyper) client and server bindings
-//! for [unix domain sockets](https://github.com/tokio-rs/tokio-uds)
+#![deny(missing_debug_implementations, unreachable_pub, rust_2018_idioms)]
+
+//! `hyperlocal` provides [Hyper](http://github.com/hyperium/hyper) bindings
+//! for [Unix domain sockets](http://github.com/tokio-rs/tokio/tree/master/tokio-uds/).
 //!
-//! See the `hyperlocal::UnixConnector` docs for how to configure hyper clients and the `hyperlocal::server::Http` docs
-//! for how to configure hyper servers
+//! See the [`hyperlocal::UnixConnector`](crate::client::UnixConnector) docs for how to
+//! configure clients and the [`hyperlocal::UnixServerExt`](crate::server::UnixServerExt)
+//! docs for how to configure servers.
 
 use std::borrow::Cow;
 use std::path::Path;
 
 use hex::FromHex;
-use hyper::Uri as HyperUri;
+use hyper::{client::connect::Destination, Uri as HyperUri};
 
 pub mod client;
-pub mod server;
 pub use client::UnixConnector;
 
-/// A type which implements `Into` for hyper's  `hyper::Uri` type
-/// targetting unix domain sockets.
+pub mod server;
+pub use server::UnixServerExt;
+
+/// A type which implements `Into` for Hyper's  `hyper::Uri`
+/// type targeting Unix domain sockets.
 ///
-/// You can use this with any of
-/// the HTTP factory methods on hyper's Client interface
-/// and for creating requests
+/// You can use this with any of the HTTP factory
+/// methods on hyper's Client interface and for
+/// creating requests.
 ///
-/// ```no_run
-/// extern crate hyper;
-/// extern crate hyperlocal;
-///
+/// ```
 /// let url: hyper::Uri = hyperlocal::Uri::new(
-///   "/path/to/socket", "/urlpath?key=value"
-///  ).into();
-///  let req = hyper::Request::get(url).body(()).unwrap();
+///     "/path/to/socket", "/urlpath?key=value"
+/// ).into();
+///
+/// let req = hyper::Request::get(url).body(()).unwrap();
 /// ```
 #[derive(Debug)]
 pub struct Uri<'a> {
@@ -69,7 +72,7 @@ impl<'a> Uri<'a> {
             .next()
     }
 
-    fn socket_path_dest(dest: &hyper::client::connect::Destination) -> Option<String> {
+    fn socket_path_dest(dest: &Destination) -> Option<String> {
         format!("unix://{}", dest.host())
             .parse()
             .ok()

@@ -1,12 +1,13 @@
-//! Hyper client bindings for unix domain sockets
-
-// Std lib
+use std::future::Future;
 use std::io;
+use std::pin::Pin;
+use std::task::{
+    Context,
+    Poll::{self, *},
+};
 
-// Third party
-use futures01::{Async, Future, Poll};
 use hyper::client::connect::{Connect, Connected, Destination};
-use tokio_uds::{ConnectFuture as StreamConnectFuture, UnixStream};
+use tokio_uds::{ConnectFuture, UnixStream};
 
 use super::Uri;
 
@@ -19,76 +20,64 @@ const UNIX_SCHEME: &str = "unix";
 /// to be constructued with `hyperlocal::Uri::new()` which produce uris with a `unix://`
 /// scheme
 ///
-/// # examples
+/// # Examples
 ///
-/// ```no_run
-/// extern crate hyper;
-/// extern crate hyperlocal;
+/// ```rust
+/// use hyper::{Body, Client};
+/// use hyperlocal::UnixConnector;
 ///
 /// let client = hyper::Client::builder()
-///    .build::<_, hyper::Body>(hyperlocal::UnixConnector::new());
+///    .build::<_, hyper::Body>(UnixConnector::default());
 /// ```
-#[derive(Clone)]
+#[derive(Clone, Debug, Default)]
 pub struct UnixConnector;
-
-impl UnixConnector {
-    pub fn new() -> Self {
-        UnixConnector
-    }
-}
 
 impl Connect for UnixConnector {
     type Transport = UnixStream;
     type Error = io::Error;
-    type Future = ConnectFuture;
+    type Future = UnixConnecting;
 
     fn connect(&self, destination: Destination) -> Self::Future {
-        ConnectFuture::Start(destination)
+        if destination.scheme() != UNIX_SCHEME {
+            return UnixConnecting::Error(Some(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "invalid URL, scheme must be unix",
+            )));
+        }
+
+        if let Some(path) = Uri::socket_path_dest(&destination) {
+            return UnixConnecting::Connecting(UnixStream::connect(&path));
+        }
+
+        UnixConnecting::Error(Some(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "invalid URL, host must be a hex-encoded path",
+        )))
     }
 }
 
-pub enum ConnectFuture {
-    Start(Destination),
-    Connect(StreamConnectFuture),
+#[doc(hidden)]
+#[derive(Debug)]
+pub enum UnixConnecting {
+    Connecting(ConnectFuture),
+    Error(Option<io::Error>),
 }
 
-impl Future for ConnectFuture {
-    type Item = (UnixStream, Connected);
-    type Error = io::Error;
+impl Future for UnixConnecting {
+    type Output = Result<(UnixStream, Connected), io::Error>;
 
-    fn poll(&mut self) -> Poll<Self::Item, Self::Error> {
-        loop {
-            let next_state = match self {
-                ConnectFuture::Start(destination) => {
-                    if destination.scheme() != UNIX_SCHEME {
-                        return Err(io::Error::new(
-                            io::ErrorKind::InvalidInput,
-                            format!("Invalid uri {:?}", destination),
-                        ));
-                    }
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let this = self.get_mut();
 
-                    let path = match Uri::socket_path_dest(&destination) {
-                        Some(path) => path,
-
-                        None => {
-                            return Err(io::Error::new(
-                                io::ErrorKind::InvalidInput,
-                                format!("Invalid uri {:?}", destination),
-                            ))
-                        }
-                    };
-
-                    ConnectFuture::Connect(UnixStream::connect(&path))
-                }
-
-                ConnectFuture::Connect(f) => match f.poll() {
-                    Ok(Async::Ready(stream)) => return Ok(Async::Ready((stream, Connected::new()))),
-                    Ok(Async::NotReady) => return Ok(Async::NotReady),
-                    Err(err) => return Err(err),
-                },
-            };
-
-            *self = next_state;
+        match this {
+            UnixConnecting::Connecting(ref mut f) => match Pin::new(f).poll(cx) {
+                Ready(Ok(stream)) => Ready(Ok((stream, Connected::new()))),
+                Pending => Pending,
+                Ready(Err(err)) => Ready(Err(err)),
+            },
+            UnixConnecting::Error(ref mut e) => {
+                Poll::Ready(Err(e.take().expect("polled more than once")))
+            }
         }
     }
 }
