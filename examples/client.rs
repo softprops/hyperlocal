@@ -7,7 +7,7 @@ use futures::TryStreamExt;
 use hyper::{Body, Client};
 use hyperlocal::{UnixConnector, Uri};
 
-#[hyper::rt::main]
+#[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let path = Path::new("/tmp/hyperlocal.sock");
 

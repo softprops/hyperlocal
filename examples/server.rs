@@ -12,7 +12,7 @@ use hyperlocal::UnixServerExt;
 
 const PHRASE: &'static str = "It's a Unix system. I know this.";
 
-#[hyper::rt::main]
+#[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let path = Path::new("/tmp/hyperlocal.sock");
 
