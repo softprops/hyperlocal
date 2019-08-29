@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use hyper::server::{Builder, Server};
-use tokio_uds::{Incoming, UnixListener};
+use tokio_net::uds::{Incoming, UnixListener};
 
 /// ```rust
 /// use hyper::{Server, Body, Response, service::{make_service_fn, service_fn}};

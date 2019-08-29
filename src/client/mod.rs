@@ -1,3 +1,4 @@
+use std::fmt;
 use std::future::Future;
 use std::io;
 use std::pin::Pin;
@@ -7,7 +8,10 @@ use std::task::{
 };
 
 use hyper::client::connect::{Connect, Connected, Destination};
-use tokio_uds::{ConnectFuture, UnixStream};
+use tokio_net::uds::UnixStream;
+
+// TODO: https://github.com/hyperium/hyper/blob/8f4b05ae78567dfc52236bc83d7be7b7fc3eebb0/src/client/connect/http.rs#L19-L20
+type ConnectFuture = Pin<Box<dyn Future<Output = io::Result<UnixStream>> + Send>>;
 
 use super::Uri;
 
@@ -37,17 +41,23 @@ impl Connect for UnixConnector {
 
     fn connect(&self, destination: Destination) -> Self::Future {
         match Uri::parse_socket_path(destination.scheme(), destination.host()) {
-            Ok(path) => UnixConnecting::Connecting(UnixStream::connect(path)),
+            Ok(path) => UnixConnecting::Connecting(Box::pin(UnixStream::connect(path))),
             Err(err) => UnixConnecting::Error(Some(err)),
         }
     }
 }
 
 #[doc(hidden)]
-#[derive(Debug)]
 pub enum UnixConnecting {
     Connecting(ConnectFuture),
     Error(Option<io::Error>),
+}
+
+impl fmt::Debug for UnixConnecting {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("UnixConnecting")
+            .finish()
+    }
 }
 
 impl Future for UnixConnecting {

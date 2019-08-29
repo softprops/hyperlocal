@@ -13,8 +13,8 @@ edition = "2018"
 [dependencies]
 hex = "0.3"
 hyper = { git = "https://github.com/hyperium/hyper" }
-tokio-uds = { git = "https://github.com/tokio-rs/tokio", features = ["async-traits"] }
+tokio-net = { version = "=0.2.0-alpha.2", features = ["async-traits"] }
 
 [dev-dependencies]
-futures-preview = { version = "0.3.0-alpha.17" }
-tokio = { git = "https://github.com/tokio-rs/tokio" }
+futures-preview = { version = "0.3.0-alpha.18" }
+tokio = "=0.2.0-alpha.2"

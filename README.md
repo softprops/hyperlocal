@@ -1,6 +1,6 @@
 # `hyperlocal` [![Build Status](https://travis-ci.org/softprops/hyperlocal.svg?branch=master)](https://travis-ci.org/softprops/hyperlocal) [![Coverage Status](https://coveralls.io/repos/github/softprops/hyperlocal/badge.svg)](https://coveralls.io/github/softprops/hyperlocal) [![crates.io](https://img.shields.io/crates/v/hyperlocal.svg)](https://crates.io/crates/hyperlocal) [![docs.rs](https://docs.rs/hyperlocal/badge.svg)](https://docs.rs/hyperlocal) [![Master API docs](https://img.shields.io/badge/docs-master-green.svg)](https://softprops.github.io/hyperlocal)
 
-> [Hyper](https://github.com/hyperium/hyper) client and server bindings for [Unix domain sockets](http://github.com/tokio-rs/tokio/tree/master/tokio-uds/)
+> [Hyper](https://github.com/hyperium/hyper) client and server bindings for [Unix domain sockets](https://github.com/tokio-rs/tokio/tree/master/tokio-net/src/uds/)
 
 Hyper is a rock solid [Rust](https://www.rust-lang.org/) HTTP client and server toolkit.
 [Unix domain sockets](https://en.wikipedia.org/wiki/Unix_domain_socket) provide a mechanism
