@@ -4,8 +4,6 @@ use hyper::server::{Builder, Server};
 use tokio_uds::{Incoming, UnixListener};
 
 /// ```rust
-/// #![feature(async_await)]
-///
 /// use hyper::{Server, Body, Response, service::{make_service_fn, service_fn}};
 /// use hyperlocal::server::UnixServerExt;
 ///

@@ -1,5 +1,3 @@
-#![feature(async_await)]
-
 use std::error::Error;
 use std::path::Path;
 

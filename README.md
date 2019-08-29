@@ -29,8 +29,6 @@ hyperlocal = "0.7-alpha.1"
 A typical server can be built with `hyperlocal::server::UnixServerExt`.
 
 ```rust
-#![feature(async_await)]
-
 use std::error::Error;
 use std::fs;
 use std::path::Path;
@@ -77,8 +75,6 @@ your standard URL string won't do. Instead, use a `hyperlocal::Uri`, which repre
 socket and the resource URI path and query string.
 
 ```rust
-#![feature(async_await)]
-
 use std::error::Error;
 use std::path::Path;
 
