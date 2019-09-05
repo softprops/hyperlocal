@@ -12,9 +12,9 @@ edition = "2018"
 
 [dependencies]
 hex = "0.3"
-hyper = { git = "https://github.com/hyperium/hyper" }
-tokio-net = { version = "=0.2.0-alpha.4", features = ["async-traits"] }
+hyper = "0.13.0-alpha.1"
+tokio-net = "0.2.0-alpha.4"
 
 [dev-dependencies]
 futures-preview = { version = "0.3.0-alpha.18" }
-tokio = "=0.2.0-alpha.4"
+tokio = "0.2.0-alpha.4"
