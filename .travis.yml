@@ -5,14 +5,11 @@ language: rust
 matrix:
   fast_finish: true
   include:
+    - rust: stable
+    - rust: beta
     - rust: nightly
       env:
         - COVERAGE=true
-    - rust: beta
-    - rust: stable
-  allow_failures:
-    - rust: beta
-    - rust: stable
 
 script:
   - cargo test
