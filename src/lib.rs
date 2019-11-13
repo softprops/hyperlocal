@@ -57,7 +57,7 @@ impl<'a> Uri<'a> {
         }
     }
 
-    fn parse_socket_path(scheme: &str, host: &str) -> Result<PathBuf, std::io::Error> {
+    fn parse_socket_path(scheme: &str, host: &str) -> Result<PathBuf, io::Error> {
         if scheme != "unix" {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,

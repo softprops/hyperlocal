@@ -26,7 +26,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         }
     });
 
-    Server::bind_unix(path).serve(make_service).await?;
+    Server::bind_unix(path)?.serve(make_service).await?;
 
     Ok(())
 }

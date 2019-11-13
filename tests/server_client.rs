@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fs;
 use std::path::Path;
 
-use futures::TryStreamExt;
+use futures_util::try_stream::TryStreamExt;
 use hyper::{
     service::{make_service_fn, service_fn},
     Body, Client, Response, Server,
@@ -27,7 +27,7 @@ async fn test_server_client() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     let (tx, rx) = tokio::sync::oneshot::channel::<()>();
 
-    let server = Server::bind_unix("/tmp/hyperlocal.sock")
+    let server = Server::bind_unix("/tmp/hyperlocal.sock")?
         .serve(make_service)
         .with_graceful_shutdown(async { rx.await.unwrap() });
 

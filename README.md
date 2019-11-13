@@ -57,7 +57,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         }
     });
 
-    Server::bind_unix(path).serve(make_service).await?;
+    Server::bind_unix(path)?.serve(make_service).await?;
 
     Ok(())
 }
@@ -78,7 +78,7 @@ socket and the resource URI path and query string.
 use std::error::Error;
 use std::path::Path;
 
-use futures::TryStreamExt;
+use futures_util::try_stream::TryStreamExt;
 use hyper::{Body, Client};
 use hyperlocal::{UnixConnector, Uri};
 
