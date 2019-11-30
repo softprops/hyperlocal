@@ -5,9 +5,11 @@ language: rust
 matrix:
   fast_finish: true
   include:
-  - rust: nightly
-  - rust: beta
-  - rust: stable
+    - rust: stable
+    - rust: beta
+    - rust: nightly
+      env:
+        - COVERAGE=true
 
 script:
   - cargo test
@@ -26,19 +28,18 @@ addons:
       - libssl-dev
 
 install: |
-  rustup toolchain install nightly
-  if [[ "$TRAVIS_RUST_VERSION" == stable ]] && [[ $(cargo +nightly tarpaulin --version) != *0.6.2 ]]; then
-    `RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo +nightly install  --force --version 0.6.2  cargo-tarpaulin`
+  if [[ $COVERAGE == true ]]; then
+    cargo install --force cargo-tarpaulin
   fi
 
 after_success:
   # report coverage to coveralls
   # see https://github.com/xd009642/tarpaulin for more information
   - '[ $TRAVIS_EVENT_TYPE != "cron" ] &&
-    [ $TRAVIS_RUST_VERSION = stable ] &&
+    [ $COVERAGE == true ] &&
     [ $TRAVIS_BRANCH = master ] &&
     [ $TRAVIS_PULL_REQUEST = false ] &&
-    cargo +nightly tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID || true'
+    cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID || true'
   - '[ $TRAVIS_RUST_VERSION = stable ] &&
     [ $TRAVIS_BRANCH = master ] &&
     [ $TRAVIS_PULL_REQUEST = false ]

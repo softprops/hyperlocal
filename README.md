@@ -1,121 +1,101 @@
-# hyperlocal [![Build Status](https://travis-ci.org/softprops/hyperlocal.svg?branch=master)](https://travis-ci.org/softprops/hyperlocal) [![Coverage Status](https://coveralls.io/repos/github/softprops/hyperlocal/badge.svg)](https://coveralls.io/github/softprops/hyperlocal) [![crates.io](https://img.shields.io/crates/v/hyperlocal.svg)](https://crates.io/crates/hyperlocal) [![docs.rs](https://docs.rs/hyperlocal/badge.svg)](https://docs.rs/hyperlocal) [![Master API docs](https://img.shields.io/badge/docs-master-green.svg)](https://softprops.github.io/hyperlocal)
+# `hyperlocal` [![Build Status](https://travis-ci.org/softprops/hyperlocal.svg?branch=master)](https://travis-ci.org/softprops/hyperlocal) [![Coverage Status](https://coveralls.io/repos/github/softprops/hyperlocal/badge.svg)](https://coveralls.io/github/softprops/hyperlocal) [![crates.io](https://img.shields.io/crates/v/hyperlocal.svg)](https://crates.io/crates/hyperlocal) [![docs.rs](https://docs.rs/hyperlocal/badge.svg)](https://docs.rs/hyperlocal) [![Master API docs](https://img.shields.io/badge/docs-master-green.svg)](https://softprops.github.io/hyperlocal)
 
-> [hyper](https://github.com/hyperium/hyper) client and server bindings for [unix domain sockets](https://github.com/tokio-rs/tokio-uds)
+> [Hyper](https://github.com/hyperium/hyper) client and server bindings for [Unix domain sockets](https://github.com/tokio-rs/tokio/tree/master/tokio-net/src/uds/)
 
-Hyper is a rock solid [rustlang](https://www.rust-lang.org/) HTTP client and server tool kit. [Unix domain sockets](https://en.wikipedia.org/wiki/Unix_domain_socket) provide
-a mechanism for host-local interprocess communication. Hyperlocal builds on and complements hyper's interfaces for building unix domain socket HTTP clients and servers.
+Hyper is a rock solid [Rust](https://www.rust-lang.org/) HTTP client and server toolkit.
+[Unix domain sockets](https://en.wikipedia.org/wiki/Unix_domain_socket) provide a mechanism
+for host-local interprocess communication. `hyperlocal` builds on and complements Hyper's
+interfaces for building Unix domain socket HTTP clients and servers.
 
-This is useful for exposing simple HTTP interfaces for your Unix daemons in cases where you want to limit access to the current host, in which case, opening and exposing tcp ports is not needed. Examples of unix daemons that provide this kind of host local interface include, [docker](https://docs.docker.com/engine/misc/), a process container manager.
+This is useful for exposing simple HTTP interfaces for your Unix daemons in cases where you
+want to limit access to the current host, in which case, opening and exposing tcp ports is
+not needed. Examples of Unix daemons that provide this kind of host local interface include
+[Docker](https://docs.docker.com/engine/misc/), a process container manager.
 
 
-## install
+## Installation
 
 Add the following to your `Cargo.toml` file
 
 ```toml
 [dependencies]
-hyperlocal = "0.6"
+hyperlocal = "0.7-alpha.1"
 ```
 
-## usage
+## Usage
 
-### servers
+### Servers
 
-A typical server can be built with `hyperlocal::server::Server`
+A typical server can be built with `hyperlocal::server::UnixServerExt`.
 
 ```rust
-extern crate hyper;
-extern crate hyperlocal;
-extern crate futures;
-
+use std::error::Error;
 use std::fs;
-use std::io;
+use std::path::Path;
 
-use hyper::{header, Body, Request, Response};
-use hyper::service::service_fn;
+use hyper::{
+    service::{make_service_fn, service_fn},
+    Body, Response, Server,
+};
+use hyperlocal::UnixServerExt;
 
 const PHRASE: &'static str = "It's a Unix system. I know this.";
 
-fn hello(_: Request<Body>) -> impl futures::Future<Item = Response<Body>, Error = io::Error> + Send {
-    futures::future::ok(
-        Response::builder()
-            .header(header::CONTENT_TYPE, "text/plain")
-            .header(header::CONTENT_LENGTH, PHRASE.len() as u64)
-            .body(PHRASE.into())
-            .expect("failed to create response")
-    )
-}
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+    let path = Path::new("/tmp/hyperlocal.sock");
 
-fn run() -> io::Result<()> {
-    let path = "test.sock";
-    if let Err(err) = fs::remove_file(path) {
-        if err.kind() != io::ErrorKind::NotFound {
-            return Err(err);
+    if path.exists() {
+        fs::remove_file(path)?;
+    }
+
+    let make_service = make_service_fn(|_| {
+        async {
+            Ok::<_, hyper::Error>(service_fn(|_req| {
+                async { Ok::<_, hyper::Error>(Response::new(Body::from(PHRASE))) }
+            }))
         }
-    }
-    let svr = hyperlocal::server::Server::bind(path, || service_fn(hello))?;
-    println!("Listening on unix://{path} with 1 thread.", path = path);
-    svr.run()?;
-    Ok(())
-}
+    });
 
-fn main() {
-    if let Err(err) = run() {
-        eprintln!("error starting server: {}", err)
-    }
+    Server::bind_unix(path)?.serve(make_service).await?;
+
+    Ok(())
 }
 ```
 
-### clients
+### Clients
 
-You can communicate over HTTP with Unix domain socket servers using hyper's Client interface.
-Configure your hyper client using `Client::configure(...)`.
+You can communicate over HTTP with Unix domain socket servers using Hyper's `Client` interface.
+Configure your Hyper client using `Client::builder()`.
 
-Hyper's client
-interface makes it easy to issue typical HTTP methods like GET, POST, DELETE with factory methods,
-`get`, `post`, `delete`, ect. These require an argument that can be tranformed into a `hyper::Uri`.
-Since unix domain sockets aren't represented with hostnames that resolve to ip addresses coupled with network ports ports,
-your standard url string won't do. Instead, use a `hyperlocal::Uri`
-which represents both file path to the domain socket and the resource uri path and query string.
+Hyper's client interface makes it easy to issue typical HTTP methods like `GET`, `POST`, `DELETE` with factory
+methods, `get`, `post`, `delete`, etc. These require an argument that can be tranformed into a `hyper::Uri`.
+Since Unix domain sockets aren't represented with hostnames that resolve to ip addresses coupled with network ports,
+your standard URL string won't do. Instead, use a `hyperlocal::Uri`, which represents both file path to the domain
+socket and the resource URI path and query string.
 
 ```rust
-extern crate futures;
-extern crate hyper;
-extern crate hyperlocal;
-extern crate tokio_core;
+use std::error::Error;
+use std::path::Path;
 
-use std::io::{self, Write};
+use futures_util::try_stream::TryStreamExt;
+use hyper::{Body, Client};
+use hyperlocal::{UnixConnector, Uri};
 
-use futures::Stream;
-use futures::Future;
-use hyper::{Client, rt};
-use hyperlocal::{Uri, UnixConnector};
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+    let path = Path::new("/tmp/hyperlocal.sock");
 
-fn main() {
-    let client = Client::builder()
-        .keep_alive(false) // without this the connection will remain open
-        .build::<_, ::hyper::Body>(UnixConnector::new());
-    let url = Uri::new("test.sock", "/").into();
+    let client = Client::builder().build::<_, Body>(UnixConnector::default());
 
-    let work = client
-        .get(url)
-        .and_then(|res| {
-            println!("Response: {}", res.status());
-            println!("Headers: {:#?}", res.headers());
+    let url = Uri::new(path, "/").into();
 
-            res.into_body().for_each(|chunk| {
-                io::stdout().write_all(&chunk)
-                    .map_err(|e| panic!("example expects stdout is open, error={}", e))
-            })
-        })
-        .map(|_| {
-            println!("\n\nDone.");
-        })
-        .map_err(|err| {
-            eprintln!("Error {}", err);
-        });
+    let response = client.get(url).await?;
+    let bytes = response.into_body().try_concat().await?.to_vec();
 
-    rt::run(work);
+    println!("{}", String::from_utf8(bytes)?);
+
+    Ok(())
 }
 ```
 

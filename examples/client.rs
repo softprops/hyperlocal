@@ -1,38 +1,22 @@
-extern crate futures;
-extern crate hyper;
-extern crate hyperlocal;
+use std::error::Error;
+use std::path::Path;
 
-use std::io::{self, Write};
-
-use futures::Future;
-use futures::Stream;
-use hyper::{rt, Client};
+use futures_util::try_stream::TryStreamExt;
+use hyper::{Body, Client};
 use hyperlocal::{UnixConnector, Uri};
 
-fn main() {
-    let client = Client::builder()
-        .keep_alive(false)
-        .build::<_, ::hyper::Body>(UnixConnector::new());
-    let url = Uri::new("test.sock", "/").into();
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+    let path = Path::new("/tmp/hyperlocal.sock");
 
-    let work = client
-        .get(url)
-        .and_then(|res| {
-            println!("Response: {}", res.status());
-            println!("Headers: {:#?}", res.headers());
+    let client = Client::builder().build::<_, Body>(UnixConnector::default());
 
-            res.into_body().for_each(|chunk| {
-                io::stdout()
-                    .write_all(&chunk)
-                    .map_err(|e| panic!("example expects stdout is open, error={}", e))
-            })
-        })
-        .map(|_| {
-            println!("\n\nDone.");
-        })
-        .map_err(|err| {
-            eprintln!("Error {}", err);
-        });
+    let url = Uri::new(path, "/").into();
 
-    rt::run(work);
+    let response = client.get(url).await?;
+    let bytes = response.into_body().try_concat().await?.to_vec();
+
+    println!("{}", String::from_utf8(bytes)?);
+
+    Ok(())
 }

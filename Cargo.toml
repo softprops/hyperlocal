@@ -1,18 +1,21 @@
 [package]
 name = "hyperlocal"
-version = "0.6.0"
+version = "0.7.0-alpha.1"
 authors = ["softprops <d.tangren@gmail.com>"]
-description = "Hyper bindings for unix domain sockets"
+description = "Hyper bindings for Unix domain sockets"
 homepage = "https://github.com/softprops/hyperlocal"
 repository = "https://github.com/softprops/hyperlocal"
 keywords = ["hyper", "unix", "sockets", "http"]
 license = "MIT"
 readme = "README.md"
+edition = "2018"
 
 [dependencies]
-futures = "0.1"
-hex = "0.3"
-hyper = "0.12"
-tokio = "0.1"
-tokio-io = "0.1"
-tokio-uds = "0.2"
+hex = "0.4"
+hyper = { version = "0.13.0-alpha.4", features = ["runtime", "unstable-stream"] }
+tokio-net = "0.2.0-alpha.6"
+futures-core-preview = "0.3.0-alpha.19"
+futures-util-preview = "0.3.0-alpha.19"
+
+[dev-dependencies]
+tokio = "0.2.0-alpha.6"
