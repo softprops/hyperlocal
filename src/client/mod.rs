@@ -1,80 +1,122 @@
-use std::fmt;
-use std::future::Future;
-use std::io;
-use std::pin::Pin;
-use std::task::{
-    Context,
-    Poll::{self, *},
+use hex::FromHex;
+use hyper::{
+    client::connect::{Connected, Connection},
+    service::Service,
+    Uri,
+};
+use pin_project::pin_project;
+use std::{
+    future::Future,
+    io,
+    path::{Path, PathBuf},
+    pin::Pin,
+    task::{Context, Poll},
 };
 
-use hyper::client::connect::{Connect, Connected, Destination};
-use tokio_net::uds::UnixStream;
+#[pin_project]
+#[derive(Debug)]
+pub struct UnixStream {
+    #[pin]
+    unix_stream: tokio::net::UnixStream,
+}
 
-// TODO: https://github.com/hyperium/hyper/blob/8f4b05ae78567dfc52236bc83d7be7b7fc3eebb0/src/client/connect/http.rs#L19-L20
-type ConnectFuture = Pin<Box<dyn Future<Output = io::Result<UnixStream>> + Send>>;
+impl UnixStream {
+    async fn connect<P>(path: P) -> std::io::Result<Self>
+    where
+        P: AsRef<Path>,
+    {
+        let unix_stream = tokio::net::UnixStream::connect(path).await?;
+        Ok(Self { unix_stream })
+    }
+}
 
-use super::Uri;
+impl tokio::io::AsyncWrite for UnixStream {
+    fn poll_write(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &[u8],
+    ) -> Poll<Result<usize, io::Error>> {
+        self.project().unix_stream.poll_write(cx, buf)
+    }
+    fn poll_flush(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+    ) -> Poll<Result<(), io::Error>> {
+        self.project().unix_stream.poll_flush(cx)
+    }
+    fn poll_shutdown(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+    ) -> Poll<Result<(), io::Error>> {
+        self.project().unix_stream.poll_shutdown(cx)
+    }
+}
 
-/// A type which implements hyper's client connector interface
-/// for unix domain sockets
-///
-/// `UnixConnector` instances expects uri's
-/// to be constructued with `hyperlocal::Uri::new()` which produce uris with a `unix://`
-/// scheme
-///
-/// # Examples
-///
-/// ```rust
-/// use hyper::{Body, Client};
-/// use hyperlocal::UnixConnector;
-///
-/// let client = hyper::Client::builder()
-///    .build::<_, hyper::Body>(UnixConnector::default());
-/// ```
-#[derive(Clone, Debug, Default)]
+impl tokio::io::AsyncRead for UnixStream {
+    fn poll_read(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &mut [u8],
+    ) -> Poll<io::Result<usize>> {
+        self.project().unix_stream.poll_read(cx, buf)
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
 pub struct UnixConnector;
 
-impl Connect for UnixConnector {
-    type Transport = UnixStream;
-    type Error = io::Error;
-    type Future = UnixConnecting;
+impl Unpin for UnixConnector {}
 
-    fn connect(&self, destination: Destination) -> Self::Future {
-        match Uri::parse_socket_path(destination.scheme(), destination.host()) {
-            Ok(path) => UnixConnecting::Connecting(Box::pin(UnixStream::connect(path))),
-            Err(err) => UnixConnecting::Error(Some(err)),
-        }
+impl Service<Uri> for UnixConnector {
+    type Response = UnixStream;
+    type Error = std::io::Error;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send + Sync>>;
+    fn call(
+        &mut self,
+        req: Uri,
+    ) -> Self::Future {
+        let fut = async move {
+            let path = parse_socket_path(req)?;
+            UnixStream::connect(path).await
+        };
+
+        Box::pin(fut)
+    }
+    fn poll_ready(
+        &mut self,
+        _cx: &mut Context<'_>,
+    ) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
     }
 }
 
-#[doc(hidden)]
-pub enum UnixConnecting {
-    Connecting(ConnectFuture),
-    Error(Option<io::Error>),
-}
-
-impl fmt::Debug for UnixConnecting {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("UnixConnecting")
-            .finish()
+impl Connection for UnixStream {
+    fn connected(&self) -> Connected {
+        Connected::new()
     }
 }
 
-impl Future for UnixConnecting {
-    type Output = Result<(UnixStream, Connected), io::Error>;
+fn parse_socket_path(uri: Uri) -> Result<std::path::PathBuf, io::Error> {
+    if uri.scheme_str() != Some("unix") {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "invalid URL, scheme must be unix",
+        ));
+    }
 
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        let this = self.get_mut();
+    if let Some(host) = uri.host() {
+        let bytes = Vec::from_hex(host).map_err(|_| {
+            io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "invalid URL, host must be a hex-encoded path",
+            )
+        })?;
 
-        match this {
-            UnixConnecting::Connecting(ref mut f) => match Pin::new(f).poll(cx) {
-                Ready(Ok(stream)) => Ready(Ok((stream, Connected::new()))),
-                Pending => Pending,
-                Ready(Err(err)) => Ready(Err(err)),
-            },
-            UnixConnecting::Error(ref mut e) => {
-                Poll::Ready(Err(e.take().expect("polled more than once")))
-            }
-        }
+        Ok(PathBuf::from(String::from_utf8_lossy(&bytes).into_owned()))
+    } else {
+        Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "invalid URL, host must be present",
+        ))
     }
 }

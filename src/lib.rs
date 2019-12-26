@@ -17,8 +17,8 @@ use hyper::Uri as HyperUri;
 pub mod client;
 pub use client::UnixConnector;
 
-pub mod server;
-pub use server::UnixServerExt;
+//pub mod server;
+//pub use server::UnixServerExt;
 
 /// A type which implements `Into` for Hyper's  `hyper::Uri`
 /// type targeting Unix domain sockets.
