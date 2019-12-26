@@ -1,6 +1,17 @@
 use hyper::Uri as HyperUri;
 use std::path::Path;
 
+/// A convenience type that can be used to construct Unix Domain Socket URIs
+///
+/// This type implements `Into<hyper::Uri>`.
+///
+/// # Example
+/// ```
+/// use hyperlocal::Uri;
+/// use hyper::Uri as HyperUri;
+///
+/// let uri: HyperUri = Uri::new("/tmp/hyperlocal.sock", "/").into();
+/// ```
 #[derive(Debug)]
 pub struct Uri {
     hyper_uri: HyperUri,

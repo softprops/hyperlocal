@@ -56,6 +56,16 @@ impl tokio::io::AsyncRead for UnixStream {
     }
 }
 
+/// the `[UnixConnector]` can be used to construct a `[hyper::Client]` which can speak to a unix domain socket.
+///
+/// # Example
+/// ```
+/// use hyper::{Client, Body};
+/// use hyperlocal::UnixConnector;
+///
+/// let connector = UnixConnector;
+/// let client: Client<UnixConnector, Body> = Client::builder().build(connector);
+/// ```
 #[derive(Clone, Copy, Debug, Default)]
 pub struct UnixConnector;
 
@@ -108,51 +118,3 @@ fn parse_socket_path(uri: Uri) -> Result<std::path::PathBuf, io::Error> {
         ))
     }
 }
-
-/* #[cfg(test)]
-mod tests {
-    use super::*;
-    use hyper::Uri as HyperUri;
-
-    #[test]
-    fn test_unix_uri_into_hyper_uri() {
-        let unix: HyperUri = Uri::new("foo.sock", "/").into();
-        let expected: HyperUri = "unix://666f6f2e736f636b:0/".parse().unwrap();
-        assert_eq!(unix, expected);
-    }
-
-    #[test]
-    fn test_hex_encoded_unix_uri() {
-        let uri: HyperUri = "unix://666f6f2e736f636b:0/".parse().unwrap();
-
-        let path = Uri::parse_socket_path(uri.scheme_str().unwrap(), uri.host().unwrap()).unwrap();
-        assert_eq!(path, PathBuf::from("foo.sock"));
-    }
-
-    #[test]
-    fn test_hex_encoded_non_unix_uri() {
-        let uri: HyperUri = "http://666f6f2e736f636b:0/".parse().unwrap();
-
-        let err =
-            Uri::parse_socket_path(uri.scheme_str().unwrap(), uri.host().unwrap()).unwrap_err();
-        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
-    }
-
-    #[test]
-    fn test_non_hex_encoded_non_unix_uri() {
-        let uri: HyperUri = "http://example.org".parse().unwrap();
-
-        let err =
-            Uri::parse_socket_path(uri.scheme_str().unwrap(), uri.host().unwrap()).unwrap_err();
-        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
-    }
-
-    #[test]
-    fn test_non_hex_encoded_unix_uri() {
-        let uri: HyperUri = "unix://example.org".parse().unwrap();
-
-        let err =
-            Uri::parse_socket_path(uri.scheme_str().unwrap(), uri.host().unwrap()).unwrap_err();
-        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
-    }
-} */
