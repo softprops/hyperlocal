@@ -7,10 +7,10 @@
 //! configure clients and the [`hyperlocal::UnixServerExt`](crate::server::UnixServerExt)
 //! docs for how to configure servers.
 
-pub mod client;
+mod client;
 pub use client::UnixConnector;
 
-pub mod server;
+mod server;
 pub use server::UnixServerExt;
 
 mod uri;

@@ -2,9 +2,9 @@ use std::{io, path::Path};
 
 use hyper::server::{Builder, Server};
 
-use self::conn::SocketIncoming;
+use conn::SocketIncoming;
 
-pub mod conn {
+mod conn {
     use futures_util::stream::Stream;
     use hyper::server::accept::Accept;
     use pin_project::pin_project;
@@ -49,7 +49,7 @@ pub mod conn {
 
 /// ```rust
 /// use hyper::{Server, Body, Response, service::{make_service_fn, service_fn}};
-/// use hyperlocal::server::UnixServerExt;
+/// use hyperlocal::UnixServerExt;
 ///
 /// # async {
 /// let make_service = make_service_fn(|_| async {

@@ -21,3 +21,16 @@ impl From<Uri> for HyperUri {
         uri.hyper_uri
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Uri;
+    use hyper::Uri as HyperUri;
+
+    #[test]
+    fn test_unix_uri_into_hyper_uri() {
+        let unix: HyperUri = Uri::new("foo.sock", "/").into();
+        let expected: HyperUri = "unix://666f6f2e736f636b:0/".parse().unwrap();
+        assert_eq!(unix, expected);
+    }
+}
