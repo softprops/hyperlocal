@@ -56,7 +56,8 @@ impl tokio::io::AsyncRead for UnixStream {
     }
 }
 
-/// the `[UnixConnector]` can be used to construct a `[hyper::Client]` which can speak to a unix domain socket.
+/// the `[UnixConnector]` can be used to construct a `[hyper::Client]` which can
+/// speak to a unix domain socket.
 ///
 /// # Example
 /// ```

@@ -3,9 +3,10 @@
 //! `hyperlocal` provides [Hyper](http://github.com/hyperium/hyper) bindings
 //! for [Unix domain sockets](https://github.com/tokio-rs/tokio/tree/master/tokio-net/src/uds/).
 //!
-//! See the [`hyperlocal::UnixConnector`](crate::client::UnixConnector) docs for how to
-//! configure clients and the [`hyperlocal::UnixServerExt`](crate::server::UnixServerExt)
-//! docs for how to configure servers.
+//! See the [`hyperlocal::UnixConnector`](crate::client::UnixConnector) docs for
+//! how to configure clients and the
+//! [`hyperlocal::UnixServerExt`](crate::server::UnixServerExt) docs for how to
+//! configure servers.
 
 mod client;
 pub use client::UnixConnector;

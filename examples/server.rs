@@ -1,6 +1,4 @@
-use std::error::Error;
-use std::fs;
-use std::path::Path;
+use std::{error::Error, fs, path::Path};
 
 use hyper::{
     service::{make_service_fn, service_fn},
