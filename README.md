@@ -90,9 +90,9 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let response_body = client.get(url).await?.into_body;
     
     let bytes = response_body
-        .try_fold(Vec::default(), |mut buf, bytes| {
+        .try_fold(Vec::default(), |mut buf, bytes| async {
             buf.extend(bytes);
-            futures_util::future::ok(buf)
+            Ok(buf)
         })
         .await?;
 

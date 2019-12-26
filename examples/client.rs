@@ -14,9 +14,9 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let response_body = client.get(url).await?.into_body();
 
     let bytes = response_body
-        .try_fold(Vec::default(), |mut v, bytes| {
+        .try_fold(Vec::default(), |mut v, bytes| async {
             v.extend(bytes);
-            futures_util::future::ok(v)
+            Ok(v)
         })
         .await?;
 
