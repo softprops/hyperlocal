@@ -8,15 +8,27 @@
 //! `hyperlocal` provides [Hyper](http://github.com/hyperium/hyper) bindings
 //! for [Unix domain sockets](https://github.com/tokio-rs/tokio/tree/master/tokio-net/src/uds/).
 //!
-//! See the [`hyperlocal::UnixConnector`](crate::client::UnixConnector) docs for
-//! how to configure clients and the
-//! [`hyperlocal::UnixServerExt`](crate::server::UnixServerExt) docs for how to
+//! See the [`UnixClientExt`] docs for
+//! how to configure clients.
+//!
+//! See the
+//! [`UnixServerExt`] docs for how to
 //! configure servers.
+//!
+//! The [`UnixConnector`] can be used in the [`hyper::Client`] builder
+//! interface, if required.
+//!
+//! # Features
+//!
+//! - Client- enables the client extension trait and connector. *Enabled by
+//!   default*.
+//!
+//! - Server- enables the server extension trait. *Enabled by default*.
 
 #[cfg(feature = "client")]
 mod client;
 #[cfg(feature = "client")]
-pub use client::UnixConnector;
+pub use client::{UnixClientExt, UnixConnector};
 
 #[cfg(feature = "server")]
 mod server;

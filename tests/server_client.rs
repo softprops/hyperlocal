@@ -5,7 +5,7 @@ use hyper::{
     service::{make_service_fn, service_fn},
     Body, Client, Response, Server,
 };
-use hyperlocal::{UnixConnector, UnixServerExt, Uri};
+use hyperlocal::{UnixClientExt, UnixServerExt, Uri};
 
 #[tokio::test]
 async fn test_server_client() -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -27,7 +27,7 @@ async fn test_server_client() -> Result<(), Box<dyn Error + Send + Sync>> {
         .serve(make_service)
         .with_graceful_shutdown(async { rx.await.unwrap() });
 
-    let client = Client::builder().build::<_, Body>(UnixConnector);
+    let client = Client::unix();
 
     let url = Uri::new(path, "/").into();
     let request = client.get(url);

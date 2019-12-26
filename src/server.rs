@@ -47,6 +47,11 @@ mod conn {
     }
 }
 
+/// Extension trait for provisioning a hyper HTTP server over a Unix domain
+/// socket.
+///
+/// # Example
+///
 /// ```rust
 /// use hyper::{Server, Body, Response, service::{make_service_fn, service_fn}};
 /// use hyperlocal::UnixServerExt;

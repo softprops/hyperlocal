@@ -76,16 +76,14 @@ use std::path::Path;
 
 use futures_util::stream::TryStreamExt;
 use hyper::{Body, Client};
-use hyperlocal::{UnixConnector, Uri};
+use hyperlocal::{Uri, UnixClientExt};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let path = Path::new("/tmp/hyperlocal.sock");
     let url = Uri::new(path, "/").into();
 
-    let unix_connector = UnixConnector;
-
-    let client: Client<UnixConnector, Body> = Client::builder().build(unix_connector);
+    let client = Client::unix();
 
     let response_body = client.get(url).await?.into_body;
     

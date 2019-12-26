@@ -3,7 +3,7 @@ use hex::FromHex;
 use hyper::{
     client::connect::{Connected, Connection},
     service::Service,
-    Uri,
+    Body, Client, Uri,
 };
 use pin_project::pin_project;
 use std::{
@@ -67,6 +67,10 @@ impl tokio::io::AsyncRead for UnixStream {
 /// let connector = UnixConnector;
 /// let client: Client<UnixConnector, Body> = Client::builder().build(connector);
 /// ```
+///
+/// # Note
+/// If you don't need access to the low-level `[hyper::Client]` builder
+/// interface, consider using the `[UnixClientExt]` trait instead.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct UnixConnector;
 
@@ -119,3 +123,22 @@ fn parse_socket_path(uri: Uri) -> Result<std::path::PathBuf, io::Error> {
         ))
     }
 }
+
+/// Extention trait for constructing a hyper HTTP client over a Unix domain
+/// socket.
+pub trait UnixClientExt {
+    /// Construct a client which speaks HTTP over a Unix domain socket
+    ///
+    /// # Example
+    /// ```
+    /// use hyper::Client;
+    /// use hyperlocal::UnixClientExt;
+    ///
+    /// let client = Client::unix();
+    /// ```
+    fn unix() -> Client<UnixConnector, Body> {
+        Client::builder().build(UnixConnector)
+    }
+}
+
+impl UnixClientExt for Client<UnixConnector> {}
