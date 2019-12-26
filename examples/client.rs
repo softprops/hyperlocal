@@ -1,20 +1,25 @@
 use std::error::Error;
 use std::path::Path;
 
-use futures_util::try_stream::TryStreamExt;
+use futures_util::stream::TryStreamExt;
 use hyper::{Body, Client};
 use hyperlocal::{UnixConnector, Uri};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let path = Path::new("/tmp/hyperlocal.sock");
+    let url = Uri::new(path, "/").into();
 
     let client = Client::builder().build::<_, Body>(UnixConnector::default());
 
-    let url = Uri::new(path, "/").into();
+    let response_body = client.get(url).await?.into_body();
 
-    let response = client.get(url).await?;
-    let bytes = response.into_body().try_concat().await?.to_vec();
+    let bytes = response_body
+        .try_fold(Vec::default(), |mut v, bytes| {
+            v.extend(bytes);
+            futures_util::future::ok(v)
+        })
+        .await?;
 
     println!("{}", String::from_utf8(bytes)?);
 
