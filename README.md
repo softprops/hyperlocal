@@ -29,9 +29,7 @@ hyperlocal = "0.7-alpha.1"
 A typical server can be built with `hyperlocal::server::UnixServerExt`.
 
 ```rust
-use std::error::Error;
-use std::fs;
-use std::path::Path;
+use std::{error::Error, fs, path::Path};
 
 use hyper::{
     service::{make_service_fn, service_fn},
@@ -49,12 +47,10 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         fs::remove_file(path)?;
     }
 
-    let make_service = make_service_fn(|_| {
-        async {
-            Ok::<_, hyper::Error>(service_fn(|_req| {
-                async { Ok::<_, hyper::Error>(Response::new(Body::from(PHRASE))) }
-            }))
-        }
+    let make_service = make_service_fn(|_| async {
+        Ok::<_, hyper::Error>(service_fn(|_req| async {
+            Ok::<_, hyper::Error>(Response::new(Body::from(PHRASE)))
+        }))
     });
 
     Server::bind_unix(path)?.serve(make_service).await?;
@@ -78,20 +74,27 @@ socket and the resource URI path and query string.
 use std::error::Error;
 use std::path::Path;
 
-use futures_util::try_stream::TryStreamExt;
+use futures_util::stream::TryStreamExt;
 use hyper::{Body, Client};
 use hyperlocal::{UnixConnector, Uri};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let path = Path::new("/tmp/hyperlocal.sock");
-
-    let client = Client::builder().build::<_, Body>(UnixConnector::default());
-
     let url = Uri::new(path, "/").into();
 
-    let response = client.get(url).await?;
-    let bytes = response.into_body().try_concat().await?.to_vec();
+    let unix_connector = UnixConnector;
+
+    let client: Client<UnixConnector, Body> = Client::builder().build(unix_connector);
+
+    let response_body = client.get(url).await?.into_body;
+    
+    let bytes = response_body
+        .try_fold(Vec::default(), |mut buf, bytes| {
+            buf.extend(bytes);
+            futures_util::future::ok(buf)
+        })
+        .await?;
 
     println!("{}", String::from_utf8(bytes)?);
 
