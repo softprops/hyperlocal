@@ -1,4 +1,4 @@
-#![deny(missing_debug_implementations, unreachable_pub, rust_2018_idioms)]
+#![deny(missing_debug_implementations, unreachable_pub, rust_2018_idioms, missing_docs)]
 
 //! `hyperlocal` provides [Hyper](http://github.com/hyperium/hyper) bindings
 //! for [Unix domain sockets](https://github.com/tokio-rs/tokio/tree/master/tokio-net/src/uds/).
