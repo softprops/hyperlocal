@@ -1,6 +1,4 @@
-use std::error::Error;
-use std::fs;
-use std::path::Path;
+use std::{error::Error, fs, path::Path};
 
 use hyper::{
     service::{make_service_fn, service_fn},
@@ -18,12 +16,10 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         fs::remove_file(path)?;
     }
 
-    let make_service = make_service_fn(|_| {
-        async {
-            Ok::<_, hyper::Error>(service_fn(|_req| {
-                async { Ok::<_, hyper::Error>(Response::new(Body::from(PHRASE))) }
-            }))
-        }
+    let make_service = make_service_fn(|_| async {
+        Ok::<_, hyper::Error>(service_fn(|_req| async {
+            Ok::<_, hyper::Error>(Response::new(Body::from(PHRASE)))
+        }))
     });
 
     Server::bind_unix(path)?.serve(make_service).await?;

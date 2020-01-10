@@ -2,29 +2,33 @@ use std::{io, path::Path};
 
 use hyper::server::{Builder, Server};
 
-use self::conn::SocketIncoming;
+use conn::SocketIncoming;
 
-pub mod conn {
-    use std::{io, path::{Path, PathBuf}, pin::Pin, task::{Context, Poll}};
-
-    use futures_core::stream::Stream;
+mod conn {
+    use futures_util::stream::Stream;
     use hyper::server::accept::Accept;
-    use tokio_net::uds::{Incoming, UnixListener, UnixStream};
+    use pin_project::pin_project;
+    use std::{
+        io,
+        path::Path,
+        pin::Pin,
+        task::{Context, Poll},
+    };
+    use tokio::net::{UnixListener, UnixStream};
 
     /// A stream of connections from binding to a socket.
+    #[pin_project]
     #[derive(Debug)]
     pub struct SocketIncoming {
-        path: PathBuf,
-        listener: Incoming,
+        listener: UnixListener,
     }
 
     impl SocketIncoming {
         /// Creates a new `SocketIncoming` binding to provided socket path.
         pub fn bind(path: impl AsRef<Path>) -> Result<Self, std::io::Error> {
-            let listener = UnixListener::bind(path.as_ref())?.incoming();
-            let path = path.as_ref().to_owned();
+            let listener = UnixListener::bind(path)?;
 
-            Ok(SocketIncoming { path, listener })
+            Ok(Self { listener })
         }
     }
 
@@ -32,15 +36,25 @@ pub mod conn {
         type Conn = UnixStream;
         type Error = io::Error;
 
-        fn poll_accept(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Result<Self::Conn, Self::Error>>> {
-            Pin::new(&mut self.listener).poll_next(cx)
+        fn poll_accept(
+            self: Pin<&mut Self>,
+            cx: &mut Context<'_>,
+        ) -> Poll<Option<Result<Self::Conn, Self::Error>>> {
+            let listener = self.project().listener;
+            let mut incoming = listener.incoming();
+            Pin::new(&mut incoming).poll_next(cx)
         }
     }
 }
 
+/// Extension trait for provisioning a hyper HTTP server over a Unix domain
+/// socket.
+///
+/// # Example
+///
 /// ```rust
 /// use hyper::{Server, Body, Response, service::{make_service_fn, service_fn}};
-/// use hyperlocal::server::UnixServerExt;
+/// use hyperlocal::UnixServerExt;
 ///
 /// # async {
 /// let make_service = make_service_fn(|_| async {
