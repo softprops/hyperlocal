@@ -4,7 +4,7 @@ use hyper::server::{Builder, Server};
 
 use conn::SocketIncoming;
 
-mod conn {
+pub(crate) mod conn {
     use futures_util::stream::Stream;
     use hyper::server::accept::Accept;
     use pin_project::pin_project;
@@ -30,6 +30,16 @@ mod conn {
 
             Ok(Self { listener })
         }
+
+        /// Creates a new `SocketIncoming` from Tokio's `UnixListener`
+        ///
+        /// ```rust,ignore
+        /// let socket = SocketIncoming::from_listener(unix_listener);
+        /// let server = Server::builder(socket).serve(service);
+        /// ```
+        pub fn from_listener(listener: UnixListener) -> Self {
+            Self { listener }
+        }
     }
 
     impl Accept for SocketIncoming {
@@ -43,6 +53,12 @@ mod conn {
             let listener = self.project().listener;
             let mut incoming = listener.incoming();
             Pin::new(&mut incoming).poll_next(cx)
+        }
+    }
+
+    impl From<UnixListener> for SocketIncoming {
+        fn from(listener: UnixListener) -> Self {
+            Self::from_listener(listener)
         }
     }
 }
