@@ -37,3 +37,5 @@ pub use server::UnixServerExt;
 
 mod uri;
 pub use uri::Uri;
+
+pub use crate::server::conn::SocketIncoming;
