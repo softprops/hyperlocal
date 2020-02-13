@@ -1,3 +1,9 @@
+# 0.7.0
+
+* reimplement server for `std::future` (`async`/`await`)
+* upgrade to tokio 0.2
+* add `SocketIncoming` interface
+
 # 0.6.0
 
 * upgrade to hyper 0.13
