@@ -19,7 +19,7 @@ Add the following to your `Cargo.toml` file
 
 ```toml
 [dependencies]
-hyperlocal = "0.7-alpha.1"
+hyperlocal = "0.7"
 ```
 
 ## Usage
