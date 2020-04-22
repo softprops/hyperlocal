@@ -85,7 +85,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     let client = Client::unix();
 
-    let response_body = client.get(url).await?.into_body;
+    let response_body = client.get(url).await?.into_body();
     
     let bytes = response_body
         .try_fold(Vec::default(), |mut buf, bytes| async {
