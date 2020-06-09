@@ -38,4 +38,5 @@ pub use server::UnixServerExt;
 mod uri;
 pub use uri::Uri;
 
+#[cfg(feature = "server")]
 pub use crate::server::conn::SocketIncoming;
