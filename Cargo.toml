@@ -13,12 +13,12 @@ edition = "2018"
 [dependencies]
 hex = "0.4.0"
 hyper = { version = "0.13.1", features = ["stream"] }
-tokio = { version = "0.2.6", features = ["uds", "stream"] }
+tokio = { version = "0.3.0", features = ["uds", "stream"] }
 pin-project = "0.4.6"
 futures-util = "0.3.1"
 
 [dev-dependencies]
-tokio = { version = "0.2.6", features = ["uds", "stream", "macros"]}
+tokio = { version = "0.3.0", features = ["uds", "stream", "macros"]}
 
 [features]
 client = []
