@@ -1,6 +1,6 @@
 use std::{error::Error, fs, path::Path};
 
-use futures_util::stream::StreamExt;
+use hyper::body::HttpBody;
 use hyper::{
     service::{make_service_fn, service_fn},
     Body, Client, Response, Server,
@@ -27,22 +27,21 @@ async fn test_server_client() -> Result<(), Box<dyn Error + Send + Sync>> {
         .serve(make_service)
         .with_graceful_shutdown(async { rx.await.unwrap() });
 
+    tokio::spawn(async move { server.await.unwrap() });
+
     let client = Client::unix();
 
     let url = Uri::new(path, "/").into();
-    let request = client.get(url);
 
-    tokio::spawn(async { server.await.unwrap() });
+    let mut response = client.get(url).await?;
+    let mut bytes = Vec::default();
 
-    let mut response = request.await?.into_body();
-    let mut v = Vec::default();
-
-    while let Some(bytes_result) = response.next().await {
-        let bytes = bytes_result?;
-        v.extend(bytes)
+    while let Some(next) = response.data().await {
+        let chunk = next?;
+        bytes.extend(chunk);
     }
 
-    let string = String::from_utf8(v)?;
+    let string = String::from_utf8(bytes)?;
 
     tx.send(()).unwrap();
 
