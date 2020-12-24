@@ -5,7 +5,6 @@ use hyper::server::{Builder, Server};
 use conn::SocketIncoming;
 
 pub(crate) mod conn {
-    use futures_util::stream::Stream;
     use hyper::server::accept::Accept;
     use pin_project::pin_project;
     use std::{
@@ -50,9 +49,10 @@ pub(crate) mod conn {
             self: Pin<&mut Self>,
             cx: &mut Context<'_>,
         ) -> Poll<Option<Result<Self::Conn, Self::Error>>> {
-            let listener = self.project().listener;
-            let mut incoming = listener.incoming();
-            Pin::new(&mut incoming).poll_next(cx)
+            match self.get_mut().listener.poll_accept(cx) {
+                Poll::Ready(res) => Poll::Ready(Some(Ok(res.unwrap().0))),
+                Poll::Pending => Poll::Pending,
+            }
         }
     }
 

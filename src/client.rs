@@ -12,6 +12,7 @@ use std::{
     pin::Pin,
     task::{Context, Poll},
 };
+use tokio::io::ReadBuf;
 
 #[pin_project]
 #[derive(Debug)]
@@ -50,8 +51,8 @@ impl tokio::io::AsyncRead for UnixStream {
     fn poll_read(
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,
-        buf: &mut [u8],
-    ) -> Poll<io::Result<usize>> {
+        buf: &mut ReadBuf<'_>,
+    ) -> Poll<io::Result<()>> {
         self.project().unix_stream.poll_read(cx, buf)
     }
 }
