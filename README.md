@@ -58,14 +58,13 @@ A typical server can be built with `hyperlocal::server::UnixServerExt`.
 
 ```rust
 use std::{error::Error, fs, path::Path};
-
 use hyper::{
     service::{make_service_fn, service_fn},
     Body, Response, Server,
 };
 use hyperlocal::UnixServerExt;
 
-const PHRASE: &'static str = "It's a Unix system. I know this.";
+const PHRASE: &str = "It's a Unix system. I know this.";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -85,6 +84,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     Ok(())
 }
+
 ```
 
 ### Clients
@@ -100,29 +100,22 @@ socket and the resource URI path and query string.
 
 ```rust
 use std::error::Error;
-use std::path::Path;
-
-use futures_util::stream::TryStreamExt;
-use hyper::{Body, Client};
-use hyperlocal::{Uri, UnixClientExt};
+use hyper::{body::HttpBody, Client};
+use hyperlocal::{UnixClientExt, Uri};
+use tokio::io::{self, AsyncWriteExt as _};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
-    let path = Path::new("/tmp/hyperlocal.sock");
-    let url = Uri::new(path, "/").into();
+    let url = Uri::new("/tmp/hyperlocal.sock", "/").into();
 
     let client = Client::unix();
 
-    let response_body = client.get(url).await?.into_body();
-    
-    let bytes = response_body
-        .try_fold(Vec::default(), |mut buf, bytes| async {
-            buf.extend(bytes);
-            Ok(buf)
-        })
-        .await?;
+    let mut response = client.get(url).await?;
 
-    println!("{}", String::from_utf8(bytes)?);
+    while let Some(next) = response.data().await {
+        let chunk = next?;
+        io::stdout().write_all(&chunk).await?;
+    }
 
     Ok(())
 }

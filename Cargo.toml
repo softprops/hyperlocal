@@ -18,7 +18,7 @@ pin-project = "1.0.2"
 futures-util = "0.3.1"
 
 [dev-dependencies]
-tokio = { version = "1.0.0", features = ["rt-multi-thread", "net", "macros"] }
+tokio = { version = "1.0.0", features = ["rt-multi-thread", "net", "macros", "io-std", "io-util"] }
 
 [features]
 client = []

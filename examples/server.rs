@@ -1,10 +1,9 @@
-use std::{error::Error, fs, path::Path};
-
 use hyper::{
     service::{make_service_fn, service_fn},
     Body, Response, Server,
 };
 use hyperlocal::UnixServerExt;
+use std::{error::Error, fs, path::Path};
 
 const PHRASE: &str = "It's a Unix system. I know this.";
 

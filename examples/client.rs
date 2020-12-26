@@ -1,7 +1,7 @@
-use std::error::Error;
-
 use hyper::{body::HttpBody, Client};
 use hyperlocal::{UnixClientExt, Uri};
+use std::error::Error;
+use tokio::io::{self, AsyncWriteExt as _};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -11,14 +11,10 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     let mut response = client.get(url).await?;
 
-    let mut bytes = Vec::default();
-
     while let Some(next) = response.data().await {
         let chunk = next?;
-        bytes.extend(chunk);
+        io::stdout().write_all(&chunk).await?;
     }
-
-    println!("{}", String::from_utf8(bytes)?);
 
     Ok(())
 }
