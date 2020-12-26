@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use futures_util::stream::TryStreamExt;
+use hyper::body::HttpBody;
 use hyper::Client;
 use hyperlocal::{UnixClientExt, Uri};
 
@@ -10,14 +10,14 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     let client = Client::unix();
 
-    let response_body = client.get(url).await?.into_body();
+    let mut response = client.get(url).await?;
 
-    let bytes = response_body
-        .try_fold(Vec::default(), |mut v, bytes| async {
-            v.extend(bytes);
-            Ok(v)
-        })
-        .await?;
+    let mut bytes = Vec::default();
+
+    while let Some(next) = response.data().await {
+        let chunk = next?;
+        bytes.extend(chunk);
+    }
 
     println!("{}", String::from_utf8(bytes)?);
 
