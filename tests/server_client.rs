@@ -1,7 +1,7 @@
 use std::{error::Error, fs, path::Path};
 
-use hyper::body::HttpBody;
 use hyper::{
+    body::HttpBody,
     service::{make_service_fn, service_fn},
     Body, Client, Response, Server,
 };

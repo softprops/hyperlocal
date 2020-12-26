@@ -1,7 +1,6 @@
 use std::error::Error;
 
-use hyper::body::HttpBody;
-use hyper::Client;
+use hyper::{body::HttpBody, Client};
 use hyperlocal::{UnixClientExt, Uri};
 
 #[tokio::main]
