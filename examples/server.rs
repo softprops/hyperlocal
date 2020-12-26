@@ -6,7 +6,7 @@ use hyper::{
 };
 use hyperlocal::UnixServerExt;
 
-const PHRASE: &'static str = "It's a Unix system. I know this.";
+const PHRASE: &str = "It's a Unix system. I know this.";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
