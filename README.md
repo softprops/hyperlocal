@@ -1,6 +1,34 @@
-# `hyperlocal` [![Build Status](https://github.com/softprops/hyperlocal/workflows/Main/badge.svg)](https://github.com/softprops/hyperlocal/actions?query=workflow%3AMain) [![crates.io](https://img.shields.io/crates/v/hyperlocal.svg)](https://crates.io/crates/hyperlocal) [![docs.rs](https://docs.rs/hyperlocal/badge.svg)](https://docs.rs/hyperlocal) [![Master API docs](https://img.shields.io/badge/docs-latest-green.svg)](https://softprops.github.io/hyperlocal)
+<div align="center">
+  🔌 ✨
+</div>
 
-> [Hyper](https://github.com/hyperium/hyper) client and server bindings for [Unix domain sockets](https://github.com/tokio-rs/tokio/tree/master/tokio-net/src/uds/)
+<h1 align="center">
+  hyperlocal
+</h1>
+
+<p align="center">
+   <a href="https://github.com/hyperium/hyper">Hyper</a> client and server bindings for <a href="https://github.com/tokio-rs/tokio/tree/master/tokio-net/src/uds/">Unix domain sockets</a>
+</p>
+
+<div align="center">
+  <a alt="GitHub Actions" href="https://github.com/softprops/hyperlocal/actions">
+    <img src="https://github.com/softprops/hyperlocal/workflows/Main/badge.svg"/>
+  </a>
+  <a alt="crates.io" href="https://crates.io/crates/hyperlocal">
+    <img src="https://img.shields.io/crates/v/hyperlocal.svg?logo=rust"/>
+  </a>
+  <a alt="docs.rs" href="http://docs.rs/hyperlocal">
+    <img src="https://docs.rs/hyperlocal/badge.svg"/>
+  </a>
+  <a alt="latest docs" href="https://softprops.github.io/hyperlocal">
+   <img src="https://img.shields.io/badge/docs-latest-green.svg"/>
+  </a>
+  <a alt="license" href="LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-brightgreen.svg"/>
+  </a>
+</div>
+
+<br />
 
 Hyper is a rock solid [Rust](https://www.rust-lang.org/) HTTP client and server toolkit.
 [Unix domain sockets](https://en.wikipedia.org/wiki/Unix_domain_socket) provide a mechanism
