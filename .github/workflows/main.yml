@@ -67,7 +67,7 @@ jobs:
           key: ${{ runner.os }}-stable-cargo-${{ hashFiles('Cargo.lock') }}
       - name: Set up Rust
         uses: hecrj/setup-rust-action@v1
-      - run: cargo check --locked --all
+      - run: cargo check --all
 
   test:
     needs: [codestyle, lint, compile]
@@ -86,64 +86,7 @@ jobs:
         rust-version: ${{ matrix.rust }}
     - name: Test
       #if: matrix.os != 'windows-latest'
-      run: cargo test --locked
-
-  release:
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: [test]
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-        include:
-          - os: ubuntu-latest
-            rust: stable
-            target: x86_64-unknown-linux-musl
-            bin: 'fasttime'
-            name: 'fasttime-Linux-x86_64.tar.gz'
-          - os: windows-latest
-            rust: stable
-            target: x86_64-pc-windows-msvc
-            bin: 'fasttime.exe'
-            name: 'fasttime-Windows-x86_64.zip'
-          - os: macOS-latest
-            rust: stable
-            target: x86_64-apple-darwin
-            bin: 'fasttime'
-            name: 'fasttime-Darwin-x86_64.tar.gz'
-    runs-on: ${{ matrix.os }}
-    steps:
-    - name: Setup Rust
-      uses: hecrj/setup-rust-action@v1
-      with:
-        rust-version: ${{ matrix.rust }}
-        targets: ${{ matrix.target }}
-    - name: Setup musl-gcc
-      if: contains(matrix.target, 'musl')
-      run: |
-        sudo apt-get install musl-tools
-    - name: Checkout
-      uses: actions/checkout@v2
-    - name: Build
-      run: cargo build --locked --release --target ${{ matrix.target }}
-    - name: Package
-      shell: bash
-      run: |
-        strip target/${{ matrix.target }}/release/${{ matrix.bin }}
-        cd target/${{ matrix.target }}/release
-        if [[ "${{ matrix.os }}" == "windows-latest" ]]
-        then
-          7z a ../../../${{ matrix.name }} ${{ matrix.bin }}
-        else
-          tar czvf ../../../${{ matrix.name }} ${{ matrix.bin }}
-        fi
-        cd -
-    - name: Publish
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-          files: 'fasttime*'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: cargo test
 
   publish-crate:
     if: startsWith(github.ref, 'refs/tags/')
@@ -156,6 +99,6 @@ jobs:
       - name: Publish
         if: startsWith(github.ref, 'refs/tags/') && env.CRATES_TOKEN
         shell: bash
-        run: cargo publish --locked --token ${{ env.CRATES_TOKEN }}
+        run: cargo publish --token ${{ env.CRATES_TOKEN }}
         env:
           CRATES_TOKEN: ${{ secrets.CRATES_TOKEN }}
