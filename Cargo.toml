@@ -11,14 +11,14 @@ readme = "README.md"
 edition = "2018"
 
 [dependencies]
-hex = "0.4.0"
-hyper = { version = "0.14.1", features = ["server", "client", "http1", "runtime"] }
-tokio = { version = "1.0.0", features = ["rt-multi-thread", "net"] }
-pin-project = "1.0.2"
-futures-util = "0.3.1"
+hex = "0.4"
+hyper = { version = "0.14", features = ["server", "client", "http1", "runtime"] }
+tokio = { version = "1.0", features = ["rt-multi-thread", "net"] }
+pin-project = "1.0"
+futures-util = "0.3"
 
 [dev-dependencies]
-tokio = { version = "1.0.0", features = ["rt-multi-thread", "net", "macros", "io-std", "io-util"] }
+tokio = { version = "1.0", features = ["rt-multi-thread", "net", "macros", "io-std", "io-util"] }
 
 [features]
 client = []
