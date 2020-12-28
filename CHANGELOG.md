@@ -1,3 +1,9 @@
+# 0.8.0
+
+* upgrade to tokio 1.0 and hyper 0.14 [#44](https://github.com/softprops/hyperlocal/pull/44)
+* port ci from Travis CI to GitHub Actions
+* `main` is the new default GitHub branch
+
 # 0.7.0
 
 * reimplement server for `std::future` (`async`/`await`)
