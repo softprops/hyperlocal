@@ -106,7 +106,7 @@ jobs:
           publish_dir: ./target/doc
 
   publish-crate:
-    if: startsWith(github.ref, 'refs/tags/') && env.CRATES_TOKEN
+    if: startsWith(github.ref, 'refs/tags/')
     needs: [test]
     runs-on: ubuntu-latest
     steps:
@@ -114,6 +114,7 @@ jobs:
         uses: hecrj/setup-rust-action@v1
       - uses: actions/checkout@v1
       - name: Publish
+        if: env.CRATES_TOKEN
         shell: bash
         run: cargo publish --token ${{ env.CRATES_TOKEN }}
         env:
