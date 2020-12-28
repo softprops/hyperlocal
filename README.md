@@ -47,7 +47,7 @@ Add the following to your `Cargo.toml` file
 
 ```toml
 [dependencies]
-hyperlocal = "0.7"
+hyperlocal = "0.8"
 ```
 
 ## Usage
@@ -87,15 +87,26 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
 ```
 
+To test that your server is working you can use an out of the box tool like `curl`
+
+
+```sh
+$ curl --unix-socket /tmp/hyperlocal.sock localhost
+
+It's a Unix system. I know this.
+```
+
 ### Clients
 
-You can communicate over HTTP with Unix domain socket servers using Hyper's `Client` interface.
-Configure your Hyper client using `Client::builder()`.
+`hyperlocal` also provides bindings for writing unix domain socket based HTTP clients using `Hyper`'s native `Client` interface.
 
-Hyper's client interface makes it easy to issue typical HTTP methods like `GET`, `POST`, `DELETE` with factory
+Configure your `Hyper` client using `hyper::Client::builder()`.
+
+Hyper's client interface makes it easy to send typical HTTP methods like `GET`, `POST`, `DELETE` with factory
 methods, `get`, `post`, `delete`, etc. These require an argument that can be tranformed into a `hyper::Uri`.
+
 Since Unix domain sockets aren't represented with hostnames that resolve to ip addresses coupled with network ports,
-your standard URL string won't do. Instead, use a `hyperlocal::Uri`, which represents both file path to the domain
+your standard over the counter URL string won't do. Instead, use a `hyperlocal::Uri`, which represents both file path to the domain
 socket and the resource URI path and query string.
 
 ```rust
@@ -121,4 +132,4 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 }
 ```
 
-Doug Tangren (softprops) 2015-2018
+Doug Tangren (softprops) 2015-2020
