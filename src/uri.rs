@@ -12,7 +12,7 @@ use std::path::Path;
 ///
 /// let uri: HyperUri = Uri::new("/tmp/hyperlocal.sock", "/").into();
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Uri {
     hyper_uri: HyperUri,
 }
