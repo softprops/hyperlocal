@@ -14,6 +14,7 @@ use std::{
 };
 use tokio::io::ReadBuf;
 
+/// A stream of the client connection to a server.
 #[pin_project]
 #[derive(Debug)]
 pub struct UnixStream {
