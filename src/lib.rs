@@ -29,7 +29,7 @@
 #[cfg(feature = "client")]
 mod client;
 #[cfg(feature = "client")]
-pub use client::{UnixClientExt, UnixConnector};
+pub use client::{UnixClientExt, UnixConnector, UnixStream};
 
 #[cfg(feature = "server")]
 mod server;
