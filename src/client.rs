@@ -5,7 +5,7 @@ use hyper::{
     service::Service,
     Body, Client, Uri,
 };
-use pin_project::pin_project;
+use pin_project_lite::pin_project;
 use std::{
     io,
     path::{Path, PathBuf},
@@ -14,11 +14,12 @@ use std::{
 };
 use tokio::io::ReadBuf;
 
-#[pin_project]
-#[derive(Debug)]
-pub struct UnixStream {
-    #[pin]
-    unix_stream: tokio::net::UnixStream,
+pin_project! {
+    #[derive(Debug)]
+    pub struct UnixStream {
+        #[pin]
+        unix_stream: tokio::net::UnixStream,
+    }
 }
 
 impl UnixStream {

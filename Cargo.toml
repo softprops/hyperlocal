@@ -14,7 +14,7 @@ edition = "2018"
 hex = "0.4"
 hyper = { version = "0.14", features = ["server", "client", "http1", "runtime"] }
 tokio = { version = "1.0", features = ["rt-multi-thread", "net"] }
-pin-project = "1.0"
+pin-project-lite = "0.2"
 futures-util = "0.3"
 
 [dev-dependencies]
