@@ -11,16 +11,34 @@ readme = "README.md"
 edition = "2018"
 
 [dependencies]
-hex = "0.4"
-hyper = { version = "0.14", features = ["server", "client", "http1", "runtime"] }
-tokio = { version = "1.0", features = ["rt-multi-thread", "net"] }
-pin-project-lite = "0.2"
 futures-util = "0.3"
+hex = "0.4"
+hyper = "0.14"
+tokio = { version = "1.0", features = ["net"] }
+pin-project-lite = "0.2"
 
 [dev-dependencies]
-tokio = { version = "1.0", features = ["rt-multi-thread", "net", "macros", "io-std", "io-util"] }
+tokio = { version = "1.0", features = ["io-std", "io-util", "macros", "rt-multi-thread"] }
 
 [features]
-client = []
-server = []
-default = ["client", "server"]
+default = []
+client = [
+    "hyper/client",
+    "hyper/http1",
+]
+server = [
+    "hyper/http1",
+    "hyper/server"
+]
+
+[[example]]
+name = "client"
+required-features = ["client", "hyper/runtime"]
+
+[[example]]
+name = "server"
+required-features = ["server", "hyper/runtime"]
+
+[[test]]
+name = "server_client"
+required-features = ["client", "server", "hyper/runtime"]
