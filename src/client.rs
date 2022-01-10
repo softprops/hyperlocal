@@ -1,24 +1,25 @@
-use futures_util::future::BoxFuture;
 use hex::FromHex;
 use hyper::{
     client::connect::{Connected, Connection},
     service::Service,
     Body, Client, Uri,
 };
-use pin_project::pin_project;
+use pin_project_lite::pin_project;
 use std::{
     io,
+    future::Future,
     path::{Path, PathBuf},
     pin::Pin,
     task::{Context, Poll},
 };
 use tokio::io::ReadBuf;
 
-#[pin_project]
-#[derive(Debug)]
-pub struct UnixStream {
-    #[pin]
-    unix_stream: tokio::net::UnixStream,
+pin_project! {
+    #[derive(Debug)]
+    pub struct UnixStream {
+        #[pin]
+        unix_stream: tokio::net::UnixStream,
+    }
 }
 
 impl UnixStream {
@@ -80,7 +81,7 @@ impl Unpin for UnixConnector {}
 impl Service<Uri> for UnixConnector {
     type Response = UnixStream;
     type Error = std::io::Error;
-    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send + 'static>>;
     fn call(&mut self, req: Uri) -> Self::Future {
         let fut = async move {
             let path = parse_socket_path(req)?;

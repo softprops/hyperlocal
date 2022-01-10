@@ -5,9 +5,8 @@ use hyper::server::{Builder, Server};
 use conn::SocketIncoming;
 
 pub(crate) mod conn {
-    use futures_util::ready;
     use hyper::server::accept::Accept;
-    use pin_project::pin_project;
+    use pin_project_lite::pin_project;
     use std::{
         io,
         path::Path,
@@ -16,11 +15,12 @@ pub(crate) mod conn {
     };
     use tokio::net::{UnixListener, UnixStream};
 
-    /// A stream of connections from binding to a socket.
-    #[pin_project]
-    #[derive(Debug)]
-    pub struct SocketIncoming {
-        listener: UnixListener,
+    pin_project! {
+        /// A stream of connections from binding to a socket.
+        #[derive(Debug)]
+        pub struct SocketIncoming {
+            listener: UnixListener,
+        }
     }
 
     impl SocketIncoming {
@@ -50,8 +50,8 @@ pub(crate) mod conn {
             self: Pin<&mut Self>,
             cx: &mut Context<'_>,
         ) -> Poll<Option<Result<Self::Conn, Self::Error>>> {
-            let conn = ready!(self.listener.poll_accept(cx))?.0;
-            Poll::Ready(Some(Ok(conn)))
+            self.listener.poll_accept(cx)?
+                .map(|(conn, _)| Some(Ok(conn)))
         }
     }
 
