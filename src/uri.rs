@@ -19,6 +19,9 @@ pub struct Uri {
 
 impl Uri {
     /// Create a new `[Uri]` from a socket address and a path
+    ///
+    /// # Panics
+    /// Will panic if path is not absolute and/or a malformed path string.
     pub fn new(socket: impl AsRef<Path>, path: &str) -> Self {
         let host = hex::encode(socket.as_ref().to_string_lossy().as_bytes());
         let host_str = format!("unix://{}:0{}", host, path);
