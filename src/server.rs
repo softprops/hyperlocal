@@ -25,6 +25,9 @@ pub(crate) mod conn {
 
     impl SocketIncoming {
         /// Creates a new `SocketIncoming` binding to provided socket path.
+        ///
+        /// # Errors
+        /// Refer to [`tokio::net::Listener::bind`](https://docs.rs/tokio/1.15.0/tokio/net/struct.UnixListener.html#method.bind).
         pub fn bind(path: impl AsRef<Path>) -> Result<Self, std::io::Error> {
             let listener = UnixListener::bind(path)?;
 
@@ -50,7 +53,8 @@ pub(crate) mod conn {
             self: Pin<&mut Self>,
             cx: &mut Context<'_>,
         ) -> Poll<Option<Result<Self::Conn, Self::Error>>> {
-            self.listener.poll_accept(cx)?
+            self.listener
+                .poll_accept(cx)?
                 .map(|(conn, _)| Some(Ok(conn)))
         }
     }
@@ -84,6 +88,7 @@ pub(crate) mod conn {
 /// ```
 pub trait UnixServerExt {
     /// Convenience method for constructing a Server listening on a Unix socket.
+    #[allow(clippy::missing_errors_doc)]
     fn bind_unix(path: impl AsRef<Path>) -> Result<Builder<SocketIncoming>, io::Error>;
 }
 

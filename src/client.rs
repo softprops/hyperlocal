@@ -6,8 +6,8 @@ use hyper::{
 };
 use pin_project_lite::pin_project;
 use std::{
-    io,
     future::Future,
+    io,
     path::{Path, PathBuf},
     pin::Pin,
     task::{Context, Poll},
@@ -23,10 +23,7 @@ pin_project! {
 }
 
 impl UnixStream {
-    async fn connect<P>(path: P) -> std::io::Result<Self>
-    where
-        P: AsRef<Path>,
-    {
+    async fn connect(path: impl AsRef<Path>) -> io::Result<Self> {
         let unix_stream = tokio::net::UnixStream::connect(path).await?;
         Ok(Self { unix_stream })
     }
@@ -40,9 +37,11 @@ impl tokio::io::AsyncWrite for UnixStream {
     ) -> Poll<Result<usize, io::Error>> {
         self.project().unix_stream.poll_write(cx, buf)
     }
+
     fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), io::Error>> {
         self.project().unix_stream.poll_flush(cx)
     }
+
     fn poll_shutdown(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), io::Error>> {
         self.project().unix_stream.poll_shutdown(cx)
     }
@@ -80,16 +79,20 @@ impl Unpin for UnixConnector {}
 
 impl Service<Uri> for UnixConnector {
     type Response = UnixStream;
-    type Error = std::io::Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send + 'static>>;
+    type Error = io::Error;
+    #[allow(clippy::type_complexity)]
+    type Future =
+        Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send + 'static>>;
+
     fn call(&mut self, req: Uri) -> Self::Future {
         let fut = async move {
-            let path = parse_socket_path(req)?;
+            let path = parse_socket_path(&req)?;
             UnixStream::connect(path).await
         };
 
         Box::pin(fut)
     }
+
     fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         Poll::Ready(Ok(()))
     }
@@ -101,7 +104,7 @@ impl Connection for UnixStream {
     }
 }
 
-fn parse_socket_path(uri: Uri) -> Result<std::path::PathBuf, io::Error> {
+fn parse_socket_path(uri: &Uri) -> Result<PathBuf, io::Error> {
     if uri.scheme_str() != Some("unix") {
         return Err(io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -138,6 +141,7 @@ pub trait UnixClientExt {
     ///
     /// let client = Client::unix();
     /// ```
+    #[must_use]
     fn unix() -> Client<UnixConnector, Body> {
         Client::builder().build(UnixConnector)
     }
