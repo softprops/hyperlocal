@@ -21,23 +21,33 @@
 //!
 //! # Features
 //!
-//! - Client- enables the client extension trait and connector. *Enabled by
-//!   default*.
+//! - Client- enables the client extension trait and connector.
 //!
-//! - Server- enables the server extension trait. *Enabled by default*.
-
-#[cfg(feature = "client")]
-mod client;
-#[cfg(feature = "client")]
-pub use client::{UnixClientExt, UnixConnector};
-
-#[cfg(feature = "server")]
-mod server;
-#[cfg(feature = "server")]
-pub use server::UnixServerExt;
+//! - Server- enables the server extension trait.
 
 mod uri;
 pub use uri::Uri;
 
-#[cfg(feature = "server")]
-pub use crate::server::conn::SocketIncoming;
+macro_rules! attr_each {
+    (#[$meta:meta] $($item:item)*) => {
+        $(
+            #[$meta]
+            $item
+        )*
+    }
+}
+
+attr_each! {
+    #[cfg(feature = "client")]
+
+    mod client;
+    pub use client::{UnixClientExt, UnixConnector};
+}
+
+attr_each! {
+    #[cfg(feature = "server")]
+
+    mod server;
+    pub use server::UnixServerExt;
+    pub use server::conn::SocketIncoming;
+}
