@@ -7,8 +7,8 @@ use std::path::Path;
 ///
 /// # Example
 /// ```
-/// use hyperlocal::Uri;
 /// use hyper::Uri as HyperUri;
+/// use hyperlocal::Uri;
 ///
 /// let uri: HyperUri = Uri::new("/tmp/hyperlocal.sock", "/").into();
 /// ```
