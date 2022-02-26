@@ -1,7 +1,7 @@
 use hyper::Uri as HyperUri;
 use std::path::Path;
 
-/// A convenience type that can be used to construct Unix Domain Socket URIs
+/// A convenience type that can be used to construct Unix Domain Socket URIs.
 ///
 /// This type implements `Into<hyper::Uri>`.
 ///
@@ -18,7 +18,7 @@ pub struct Uri {
 }
 
 impl Uri {
-    /// Create a new `[Uri]` from a socket address and a path
+    /// Create a new [`Uri`] from a socket address and a path.
     ///
     /// # Panics
     /// Will panic if path is not absolute and/or a malformed path string.

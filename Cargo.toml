@@ -41,3 +41,6 @@ required-features = ["server", "hyper/runtime"]
 [[test]]
 name = "server_client"
 required-features = ["client", "server", "hyper/runtime"]
+
+[package.metadata.docs.rs]
+all-features = true

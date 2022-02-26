@@ -43,11 +43,21 @@ not needed. Examples of Unix daemons that provide this kind of host local interf
 
 ## Installation
 
-Add the following to your `Cargo.toml` file
+By default `hyperlocal` does not enable any [feature flags](https://doc.rust-lang.org/cargo/reference/features.html),
+so you will need to enable the appropriate features for your use-case.
+
+For server usage, add the following to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-hyperlocal = "0.8"
+hyperlocal = { version = "0.8", features = ["server"] }
+```
+
+Or for client usage:
+
+```toml
+[dependencies]
+hyperlocal = { version = "0.8", features = ["client"] }
 ```
 
 ## Usage
@@ -103,7 +113,7 @@ It's a Unix system. I know this.
 Configure your `Hyper` client using `hyper::Client::builder()`.
 
 Hyper's client interface makes it easy to send typical HTTP methods like `GET`, `POST`, `DELETE` with factory
-methods, `get`, `post`, `delete`, etc. These require an argument that can be tranformed into a `hyper::Uri`.
+methods, `get`, `post`, `delete`, etc. These require an argument that can be transformed into a `hyper::Uri`.
 
 Since Unix domain sockets aren't represented with hostnames that resolve to ip addresses coupled with network ports,
 your standard over the counter URL string won't do. Instead, use a `hyperlocal::Uri`, which represents both file path to the domain

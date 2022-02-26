@@ -57,7 +57,7 @@ impl tokio::io::AsyncRead for UnixStream {
     }
 }
 
-/// the `[UnixConnector]` can be used to construct a `[hyper::Client]` which can
+/// The [`UnixConnector`] can be used to construct a [`hyper::Client`] which can
 /// speak to a unix domain socket.
 ///
 /// # Example
@@ -70,8 +70,8 @@ impl tokio::io::AsyncRead for UnixStream {
 /// ```
 ///
 /// # Note
-/// If you don't need access to the low-level `[hyper::Client]` builder
-/// interface, consider using the `[UnixClientExt]` trait instead.
+/// If you don't need access to the low-level [`hyper::Client`] builder
+/// interface, consider using the [`UnixClientExt`] trait instead.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct UnixConnector;
 
@@ -129,7 +129,7 @@ fn parse_socket_path(uri: &Uri) -> Result<PathBuf, io::Error> {
     }
 }
 
-/// Extention trait for constructing a hyper HTTP client over a Unix domain
+/// Extension trait for constructing a hyper HTTP client over a Unix domain
 /// socket.
 pub trait UnixClientExt {
     /// Construct a client which speaks HTTP over a Unix domain socket

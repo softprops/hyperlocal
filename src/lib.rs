@@ -9,22 +9,21 @@
 //! `hyperlocal` provides [Hyper](http://github.com/hyperium/hyper) bindings
 //! for [Unix domain sockets](https://github.com/tokio-rs/tokio/tree/master/tokio-net/src/uds/).
 //!
-//! See the [`UnixClientExt`] docs for
-//! how to configure clients.
+//! See the [`UnixClientExt`] docs for how to configure clients.
 //!
-//! See the
-//! [`UnixServerExt`] docs for how to
-//! configure servers.
+//! See the [`UnixServerExt`] docs for how to configure servers.
 //!
 //! The [`UnixConnector`] can be used in the [`hyper::Client`] builder
 //! interface, if required.
 //!
 //! # Features
 //!
-//! - Client- enables the client extension trait and connector. *Enabled by
-//!   default*.
+//! By default `hyperlocal` does not enable any [feature flags](https://doc.rust-lang.org/cargo/reference/features.html).
 //!
-//! - Server- enables the server extension trait. *Enabled by default*.
+//! The following features are available:
+//!
+//! - **`client`** — Enables the client extension trait and connector.
+//! - **`server`** — Enables the server extension trait.
 
 #[cfg(feature = "client")]
 mod client;

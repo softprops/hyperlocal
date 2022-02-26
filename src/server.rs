@@ -34,7 +34,7 @@ pub(crate) mod conn {
             Ok(Self { listener })
         }
 
-        /// Creates a new `SocketIncoming` from Tokio's `UnixListener`
+        /// Creates a new `SocketIncoming` from Tokio's [`UnixListener`].
         ///
         /// ```rust,ignore
         /// let socket = SocketIncoming::from_listener(unix_listener);
