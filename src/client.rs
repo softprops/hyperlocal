@@ -15,6 +15,7 @@ use std::{
 use tokio::io::ReadBuf;
 
 pin_project! {
+    /// Wrapper around [`tokio::net::UnixStream`].
     #[derive(Debug)]
     pub struct UnixStream {
         #[pin]
