@@ -1,11 +1,21 @@
+use http_body_util::{BodyExt, Full};
 use std::{error::Error, fs, path::Path};
 
-use hyper::{
-    body::HttpBody,
-    service::{make_service_fn, service_fn},
-    Body, Client, Response, Server,
-};
-use hyperlocal::{UnixClientExt, UnixServerExt, Uri};
+use hyper::{body::Bytes, service::service_fn, Response};
+use hyper_util::{client::legacy::Client, rt::TokioIo};
+use hyperlocal::{UnixClientExt, UnixConnector, Uri};
+use tokio::net::UnixListener;
+
+const PHRASE: &str = "It works!";
+
+#[derive(Debug, thiserror::Error)]
+enum ListenerError {
+    #[error("Failed to accept connection: {0}")]
+    Accepting(std::io::Error),
+
+    #[error("Failed to serve connection: {0}")]
+    Serving(hyper::Error),
+}
 
 #[tokio::test]
 async fn test_server_client() -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -15,37 +25,40 @@ async fn test_server_client() -> Result<(), Box<dyn Error + Send + Sync>> {
         fs::remove_file(path)?;
     }
 
-    let make_service = make_service_fn(|_| async {
-        Ok::<_, hyper::Error>(service_fn(|_req| async {
-            Ok::<_, hyper::Error>(Response::new(Body::from("It works!")))
-        }))
+    let svc_fn =
+        service_fn(|_req| async { Ok::<_, hyper::Error>(Response::new(PHRASE.to_string())) });
+
+    let listener = UnixListener::bind(path)?;
+
+    let _server_task = tokio::spawn(async move {
+        let (stream, _) = listener.accept().await.map_err(ListenerError::Accepting)?;
+
+        let io = TokioIo::new(stream);
+
+        hyper::server::conn::http1::Builder::new()
+            .serve_connection(io, svc_fn)
+            .await
+            .map_err(ListenerError::Serving)
     });
 
-    let (tx, rx) = tokio::sync::oneshot::channel::<()>();
-
-    let server = Server::bind_unix("/tmp/hyperlocal.sock")?
-        .serve(make_service)
-        .with_graceful_shutdown(async { rx.await.unwrap() });
-
-    tokio::spawn(async move { server.await.unwrap() });
-
-    let client = Client::unix();
+    let client: Client<UnixConnector, Full<Bytes>> = Client::unix();
 
     let url = Uri::new(path, "/").into();
 
     let mut response = client.get(url).await?;
     let mut bytes = Vec::default();
 
-    while let Some(next) = response.data().await {
-        let chunk = next?;
-        bytes.extend(chunk);
+    while let Some(frame_result) = response.frame().await {
+        let frame = frame_result?;
+
+        if let Some(segment) = frame.data_ref() {
+            bytes.extend(segment.iter().as_slice());
+        }
     }
 
     let string = String::from_utf8(bytes)?;
 
-    tx.send(()).unwrap();
-
-    assert_eq!(string, "It works!");
+    assert_eq!(PHRASE, string);
 
     Ok(())
 }

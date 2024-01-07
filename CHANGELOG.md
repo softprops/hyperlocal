@@ -1,3 +1,7 @@
+# 0.9.0
+
+* upgrade to hyper 1.0
+
 # 0.8.0
 
 * upgrade to tokio 1.0 and hyper 0.14 [#44](https://github.com/softprops/hyperlocal/pull/44)
