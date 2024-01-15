@@ -1,3 +1,0 @@
-(function() {var implementors = {};
-implementors["hyperlocal"] = [{"text":"impl Accept for <a class=\"struct\" href=\"hyperlocal/struct.SocketIncoming.html\" title=\"struct hyperlocal::SocketIncoming\">SocketIncoming</a>","synthetic":false,"types":["hyperlocal::server::conn::SocketIncoming"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
