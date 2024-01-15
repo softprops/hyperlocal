@@ -24,7 +24,7 @@ impl Uri {
     /// Will panic if path is not absolute and/or a malformed path string.
     pub fn new(socket: impl AsRef<Path>, path: &str) -> Self {
         let host = hex::encode(socket.as_ref().to_string_lossy().as_bytes());
-        let host_str = format!("unix://{}:0{}", host, path);
+        let host_str = format!("unix://{host}:0{path}");
         let hyper_uri: HyperUri = host_str.parse().unwrap();
 
         Self { hyper_uri }

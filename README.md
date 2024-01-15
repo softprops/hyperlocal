@@ -47,47 +47,20 @@ Add the following to your `Cargo.toml` file
 
 ```toml
 [dependencies]
-hyperlocal = "0.8"
+hyperlocal = "0.9"
 ```
 
 ## Usage
 
 ### Servers
 
-A typical server can be built with `hyperlocal::server::UnixServerExt`.
+A typical server can be built by creating a `tokio::net::UnixListener` and accepting connections in a loop using
+`hyper::service::service_fn` to create a request/response processing function, and connecting the `UnixStream` to it
+using `hyper::server::conn::http1::Builder::new().serve_connection()`.
 
-```rust
-use std::{error::Error, fs, path::Path};
-use hyper::{
-    service::{make_service_fn, service_fn},
-    Body, Response, Server,
-};
-use hyperlocal::UnixServerExt;
+An example is at [examples/server.rs](./examples/server.rs).
 
-const PHRASE: &str = "It's a Unix system. I know this.";
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
-    let path = Path::new("/tmp/hyperlocal.sock");
-
-    if path.exists() {
-        fs::remove_file(path)?;
-    }
-
-    let make_service = make_service_fn(|_| async {
-        Ok::<_, hyper::Error>(service_fn(|_req| async {
-            Ok::<_, hyper::Error>(Response::new(Body::from(PHRASE)))
-        }))
-    });
-
-    Server::bind_unix(path)?.serve(make_service).await?;
-
-    Ok(())
-}
-
-```
-
-To test that your server is working you can use an out of the box tool like `curl`
+To test that your server is working you can use an out-of-the-box tool like `curl`
 
 
 ```sh
@@ -98,9 +71,10 @@ It's a Unix system. I know this.
 
 ### Clients
 
-`hyperlocal` also provides bindings for writing unix domain socket based HTTP clients using `Hyper`'s native `Client` interface.
+`hyperlocal` also provides bindings for writing unix domain socket based HTTP clients the `Client` interface from the
+`hyper-utils` crate.
 
-Configure your `Hyper` client using `hyper::Client::builder()`.
+An example is at [examples/client.rs](./examples/client.rs).
 
 Hyper's client interface makes it easy to send typical HTTP methods like `GET`, `POST`, `DELETE` with factory
 methods, `get`, `post`, `delete`, etc. These require an argument that can be tranformed into a `hyper::Uri`.
@@ -109,27 +83,6 @@ Since Unix domain sockets aren't represented with hostnames that resolve to ip a
 your standard over the counter URL string won't do. Instead, use a `hyperlocal::Uri`, which represents both file path to the domain
 socket and the resource URI path and query string.
 
-```rust
-use std::error::Error;
-use hyper::{body::HttpBody, Client};
-use hyperlocal::{UnixClientExt, Uri};
-use tokio::io::{self, AsyncWriteExt as _};
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
-    let url = Uri::new("/tmp/hyperlocal.sock", "/").into();
-
-    let client = Client::unix();
-
-    let mut response = client.get(url).await?;
-
-    while let Some(next) = response.data().await {
-        let chunk = next?;
-        io::stdout().write_all(&chunk).await?;
-    }
-
-    Ok(())
-}
-```
+---
 
 Doug Tangren (softprops) 2015-2020
