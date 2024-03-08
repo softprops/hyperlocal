@@ -1,5 +1,6 @@
-<div align="center">
-  🔌 ✨
+u<div align="center">
+🔌 ✨
+
 </div>
 
 <h1 align="center">
@@ -40,7 +41,6 @@ want to limit access to the current host, in which case, opening and exposing tc
 not needed. Examples of Unix daemons that provide this kind of host local interface include
 [Docker](https://docs.docker.com/engine/misc/), a process container manager.
 
-
 ## Installation
 
 Add the following to your `Cargo.toml` file
@@ -58,10 +58,9 @@ A typical server can be built by creating a `tokio::net::UnixListener` and accep
 `hyper::service::service_fn` to create a request/response processing function, and connecting the `UnixStream` to it
 using `hyper::server::conn::http1::Builder::new().serve_connection()`.
 
-An example is at [examples/server.rs](./examples/server.rs).
+An example is at [examples/server.rs](./examples/server.rs), runnable via `cargo run --example server`
 
 To test that your server is working you can use an out-of-the-box tool like `curl`
-
 
 ```sh
 $ curl --unix-socket /tmp/hyperlocal.sock localhost
@@ -74,7 +73,7 @@ It's a Unix system. I know this.
 `hyperlocal` also provides bindings for writing unix domain socket based HTTP clients the `Client` interface from the
 `hyper-utils` crate.
 
-An example is at [examples/client.rs](./examples/client.rs).
+An example is at [examples/client.rs](./examples/client.rs), runnable via `cargo run --features="server" --example client`
 
 Hyper's client interface makes it easy to send typical HTTP methods like `GET`, `POST`, `DELETE` with factory
 methods, `get`, `post`, `delete`, etc. These require an argument that can be tranformed into a `hyper::Uri`.
