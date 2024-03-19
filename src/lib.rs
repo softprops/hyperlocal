@@ -19,7 +19,7 @@
 #[cfg(feature = "client")]
 mod client;
 #[cfg(feature = "client")]
-pub use client::{UnixClientExt, UnixConnector};
+pub use client::{UnixClientExt, UnixConnector, UnixStream};
 
 mod uri;
 
