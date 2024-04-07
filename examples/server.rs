@@ -1,6 +1,6 @@
 use hyper::{service::service_fn, Response};
 use hyper_util::rt::TokioIo;
-use std::{error::Error, fs, io::ErrorKind, path::Path};
+use std::{error::Error, fs, path::Path};
 use tokio::net::UnixListener;
 
 const PHRASE: &str = "It's a Unix system. I know this.\n";
@@ -30,12 +30,10 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                 Ok::<_, hyper::Error>(Response::new(body))
             });
 
-            // On linux, serve_connection will return right away with Result::Ok.
-            //
-            // On OSX, serve_connection will block until the client disconnects,
-            // and return Result::Err(hyper::Error) with a source (inner/cause)
-            // socket error indicating the client connection is no longer open.
             match hyper::server::conn::http1::Builder::new()
+                // On OSX, disabling keep alive prevents serve_connection from
+                // blocking and later returning an Err derived from E_NOTCONN.
+                .keep_alive(false)
                 .serve_connection(io, svc_fn)
                 .await
             {
@@ -43,17 +41,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     println!("Accepted connection.");
                 }
                 Err(err) => {
-                    let source: Option<&std::io::Error> =
-                        err.source().and_then(|s| s.downcast_ref());
-
-                    match source {
-                        Some(io_err) if io_err.kind() == ErrorKind::NotConnected => {
-                            println!("Client disconnected.");
-                        }
-                        _ => {
-                            eprintln!("Failed to accept connection: {err:?}");
-                        }
-                    }
+                    eprintln!("Failed to accept connection: {err:?}");
                 }
             };
         });
