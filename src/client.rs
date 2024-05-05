@@ -43,11 +43,17 @@ impl AsyncWrite for UnixStream {
         self.project().unix_stream.poll_write(cx, buf)
     }
 
-    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), io::Error>> {
+    fn poll_flush(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+    ) -> Poll<Result<(), io::Error>> {
         self.project().unix_stream.poll_flush(cx)
     }
 
-    fn poll_shutdown(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), io::Error>> {
+    fn poll_shutdown(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+    ) -> Poll<Result<(), io::Error>> {
         self.project().unix_stream.poll_shutdown(cx)
     }
 }
@@ -61,11 +67,17 @@ impl hyper::rt::Write for UnixStream {
         self.project().unix_stream.poll_write(cx, buf)
     }
 
-    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Error>> {
+    fn poll_flush(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+    ) -> Poll<Result<(), Error>> {
         self.project().unix_stream.poll_flush(cx)
     }
 
-    fn poll_shutdown(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Error>> {
+    fn poll_shutdown(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+    ) -> Poll<Result<(), Error>> {
         self.project().unix_stream.poll_shutdown(cx)
     }
 }
@@ -98,12 +110,12 @@ impl hyper::rt::Read for UnixStream {
 /// ```
 /// use http_body_util::Full;
 /// use hyper::body::Bytes;
-/// use hyper_util::client::legacy::Client;
-/// use hyper_util::rt::TokioExecutor;
+/// use hyper_util::{client::legacy::Client, rt::TokioExecutor};
 /// use hyperlocal::UnixConnector;
 ///
 /// let connector = UnixConnector;
-/// let client: Client<UnixConnector, Full<Bytes>> = Client::builder(TokioExecutor::new()).build(connector);
+/// let client: Client<UnixConnector, Full<Bytes>> =
+///     Client::builder(TokioExecutor::new()).build(connector);
 /// ```
 ///
 /// # Note
@@ -121,7 +133,10 @@ impl Service<Uri> for UnixConnector {
     type Future =
         Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send + 'static>>;
 
-    fn call(&mut self, req: Uri) -> Self::Future {
+    fn call(
+        &mut self,
+        req: Uri,
+    ) -> Self::Future {
         let fut = async move {
             let path = parse_socket_path(&req)?;
             UnixStream::connect(path).await
@@ -130,7 +145,10 @@ impl Service<Uri> for UnixConnector {
         Box::pin(fut)
     }
 
-    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(
+        &mut self,
+        _cx: &mut Context<'_>,
+    ) -> Poll<Result<(), Self::Error>> {
         Poll::Ready(Ok(()))
     }
 }
