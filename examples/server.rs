@@ -1,7 +1,9 @@
-use hyper::{service::service_fn, Response};
-use hyper_util::rt::TokioIo;
 use std::{error::Error, fs, path::Path};
+
+use hyper::Response;
 use tokio::net::UnixListener;
+
+use hyperlocal::UnixListenerExt;
 
 const PHRASE: &str = "It's a Unix system. I know this.\n";
 
@@ -18,32 +20,16 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     println!("Listening for connections at {}.", path.display());
 
-    loop {
-        let (stream, _) = listener.accept().await?;
-        let io = TokioIo::new(stream);
+    listener
+        .serve(|| {
+            println!("Accepted connection.");
 
-        println!("Accepting connection.");
-
-        tokio::task::spawn(async move {
-            let svc_fn = service_fn(|_req| async {
+            |_request| async {
                 let body = PHRASE.to_string();
                 Ok::<_, hyper::Error>(Response::new(body))
-            });
+            }
+        })
+        .await?;
 
-            match hyper::server::conn::http1::Builder::new()
-                // On OSX, disabling keep alive prevents serve_connection from
-                // blocking and later returning an Err derived from E_NOTCONN.
-                .keep_alive(false)
-                .serve_connection(io, svc_fn)
-                .await
-            {
-                Ok(()) => {
-                    println!("Accepted connection.");
-                }
-                Err(err) => {
-                    eprintln!("Failed to accept connection: {err:?}");
-                }
-            };
-        });
-    }
+    Ok(())
 }

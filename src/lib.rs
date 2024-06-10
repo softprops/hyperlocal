@@ -15,11 +15,18 @@
 //!
 //! - Client- enables the client extension trait and connector. *Enabled by
 //!   default*.
+//!
+//! - Server- enables the server extension trait. *Enabled by default*.
 
 #[cfg(feature = "client")]
 mod client;
 #[cfg(feature = "client")]
 pub use client::{UnixClientExt, UnixConnector};
+
+#[cfg(feature = "server")]
+mod server;
+#[cfg(feature = "server")]
+pub use server::UnixListenerExt;
 
 mod uri;
 
