@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["UnixConnector","Uri"],"trait":["UnixClientExt"]};
+window.SIDEBAR_ITEMS = {"struct":["UnixConnector","Uri"],"trait":["UnixClientExt","UnixListenerExt"]};

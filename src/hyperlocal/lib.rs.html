@@ -26,6 +26,13 @@
 <a href="#24" id="24">24</a>
 <a href="#25" id="25">25</a>
 <a href="#26" id="26">26</a>
+<a href="#27" id="27">27</a>
+<a href="#28" id="28">28</a>
+<a href="#29" id="29">29</a>
+<a href="#30" id="30">30</a>
+<a href="#31" id="31">31</a>
+<a href="#32" id="32">32</a>
+<a href="#33" id="33">33</a>
 </pre></div><pre class="rust"><code><span class="attr">#![deny(
     missing_debug_implementations,
     unreachable_pub,
@@ -43,11 +50,18 @@
 //!
 //! - Client- enables the client extension trait and connector. *Enabled by
 //!   default*.
+//!
+//! - Server- enables the server extension trait. *Enabled by default*.
 
 </span><span class="attr">#[cfg(feature = <span class="string">"client"</span>)]
 </span><span class="kw">mod </span>client;
 <span class="attr">#[cfg(feature = <span class="string">"client"</span>)]
 </span><span class="kw">pub use </span>client::{UnixClientExt, UnixConnector};
+
+<span class="attr">#[cfg(feature = <span class="string">"server"</span>)]
+</span><span class="kw">mod </span>server;
+<span class="attr">#[cfg(feature = <span class="string">"server"</span>)]
+</span><span class="kw">pub use </span>server::UnixListenerExt;
 
 <span class="kw">mod </span>uri;
 
