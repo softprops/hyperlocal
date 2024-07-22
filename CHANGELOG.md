@@ -1,9 +1,6 @@
-# 0.9.2
-
-- Export UnixStream for clients [#60](https://github.com/softprops/hyperlocal/pull/60) via [@onalante-msft](https://github.com/onalante-msft)
-
 # 0.9.1
 
+- Export UnixStream for clients [#60](https://github.com/softprops/hyperlocal/pull/60) via [@onalante-msft](https://github.com/onalante-msft)
 - Adding support for UnixStream to take advantage of vectored writes [#63](https://github.com/softprops/hyperlocal/pull/63) via [@craftytrickster](https://github.com/craftytrickster)
 
 # 0.9.0
