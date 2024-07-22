@@ -86,4 +86,4 @@ socket and the resource URI path and query string.
 
 ---
 
-Doug Tangren (softprops) 2015-2020
+Doug Tangren (softprops) 2015-2024
