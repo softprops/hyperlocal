@@ -20,6 +20,7 @@ use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 use tower_service::Service;
 
 pin_project! {
+    /// Wrapper around [`tokio::net::UnixStream`].
     #[derive(Debug)]
     pub struct UnixStream {
         #[pin]
