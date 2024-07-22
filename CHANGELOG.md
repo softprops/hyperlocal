@@ -1,3 +1,7 @@
+# 0.9.1
+
+-  Adding support for UnixStream to take advantage of vectored writes [#63](https://github.com/softprops/hyperlocal/pull/63) via [@craftytrickster](https://github.com/craftytrickster)
+
 # 0.9.0
 
 - upgrade to hyper 1.1 [#65](https://github.com/softprops/hyperlocal/pull/65) via [iamjpotts](https://github.com/iamjpotts)
