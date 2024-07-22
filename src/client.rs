@@ -56,6 +56,18 @@ impl AsyncWrite for UnixStream {
     ) -> Poll<Result<(), io::Error>> {
         self.project().unix_stream.poll_shutdown(cx)
     }
+
+    fn poll_write_vectored(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        bufs: &[IoSlice<'_>],
+    ) -> Poll<Result<usize, Error>> {
+        self.project().unix_stream.poll_write_vectored(cx)
+    }
+
+    fn is_write_vectored(&self) -> bool {
+        self.project().unix_stream.is_write_vectored()
+    }
 }
 
 impl hyper::rt::Write for UnixStream {
