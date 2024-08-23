@@ -1,4 +1,4 @@
-use hyper::Uri as HyperUri;
+use hyper::{http::uri::InvalidUri, Uri as HyperUri};
 use std::path::Path;
 
 /// A convenience type that can be used to construct Unix Domain Socket URIs
@@ -10,7 +10,7 @@ use std::path::Path;
 /// use hyper::Uri as HyperUri;
 /// use hyperlocal::Uri;
 ///
-/// let uri: HyperUri = Uri::new("/tmp/hyperlocal.sock", "/").into();
+/// let uri: HyperUri = Uri::new("/tmp/hyperlocal.sock", "/").unwrap().into();
 /// ```
 #[derive(Debug, Clone)]
 pub struct Uri {
@@ -20,17 +20,18 @@ pub struct Uri {
 impl Uri {
     /// Create a new `[Uri]` from a socket address and a path
     ///
-    /// # Panics
-    /// Will panic if path is not absolute and/or a malformed path string.
+    /// # Errors
+    ///
+    /// Returns an error if path is not absolute and/or a malformed path string.
     pub fn new(
         socket: impl AsRef<Path>,
         path: &str,
-    ) -> Self {
+    ) -> Result<Self, InvalidUri> {
         let host = hex::encode(socket.as_ref().to_string_lossy().as_bytes());
         let host_str = format!("unix://{host}:0{path}");
-        let hyper_uri: HyperUri = host_str.parse().unwrap();
+        let hyper_uri: HyperUri = host_str.parse()?;
 
-        Self { hyper_uri }
+        Ok(Self { hyper_uri })
     }
 }
 
@@ -47,7 +48,7 @@ mod tests {
 
     #[test]
     fn test_unix_uri_into_hyper_uri() {
-        let unix: HyperUri = Uri::new("foo.sock", "/").into();
+        let unix: HyperUri = Uri::new("foo.sock", "/").unwrap().into();
         let expected: HyperUri = "unix://666f6f2e736f636b:0/".parse().unwrap();
         assert_eq!(unix, expected);
     }

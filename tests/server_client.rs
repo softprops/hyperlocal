@@ -43,7 +43,7 @@ async fn test_server_client() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     let client: Client<UnixConnector, Full<Bytes>> = Client::unix();
 
-    let url = Uri::new(path, "/").into();
+    let url = Uri::new(path, "/").unwrap().into();
 
     let mut response = client.get(url).await?;
     let mut bytes = Vec::default();

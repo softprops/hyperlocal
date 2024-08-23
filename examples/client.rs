@@ -7,7 +7,7 @@ use tokio::io::{self, AsyncWriteExt as _};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
-    let url = Uri::new("/tmp/hyperlocal.sock", "/").into();
+    let url = Uri::new("/tmp/hyperlocal.sock", "/").unwrap().into();
 
     let client: Client<UnixConnector, Full<Bytes>> = Client::unix();
 
