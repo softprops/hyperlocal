@@ -18,6 +18,7 @@ hyper-util = { version = "0.1.2", optional = true }
 tokio = { version = "1.35", default-features = false, features = ["net"] }
 tower-service = { version = "0.3", optional = true }
 pin-project-lite = "0.2"
+http = "1.4.0"
 
 [dev-dependencies]
 thiserror = "1.0"
